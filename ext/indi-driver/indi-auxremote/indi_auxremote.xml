@@ -1,0 +1,6 @@
+<devGroup group="Telescopes">
+        <device label="Celestron AuxRemote">
+                <driver name="AuxRmote">indi_auxremote</driver>
+                <version>1.0</version>
+        </device>
+</devGroup>
