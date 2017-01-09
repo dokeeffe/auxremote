@@ -1,6 +1,6 @@
 # auxremote
 
 [![Build Status](https://travis-ci.org/dokeeffe/auxremote.svg?branch=master)](https://travis-ci.org/dokeeffe/auxremote) 
-[![Coverage Status](https://coveralls.io/repos/github/dokeeffe/auxremote/badge.svg?branch=master)](https://coveralls.io/github/dokeeffe/auxremote?branch=master)
+[![Coverage Status](https://codecov.io/github/dokeeffe/auxremote/coverage.svg?precision=1)](https://codecov.io/gh/dokeeffe/auxremote)
 
 THIS IS A WORK IN PROGRESS
