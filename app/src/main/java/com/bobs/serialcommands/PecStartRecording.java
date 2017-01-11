@@ -1,14 +1,8 @@
 package com.bobs.serialcommands;
 
-import com.bobs.coord.AltAz;
-import com.bobs.coord.Target;
 import com.bobs.mount.Mount;
-import com.bobs.mount.TrackingMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.xml.bind.DatatypeConverter;
-import java.util.Calendar;
 
 /**
  * Created by dokeeffe on 25/12/16.

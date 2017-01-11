@@ -1,14 +1,12 @@
 package com.bobs.serialcommands;
 
-import com.bobs.mount.Mount;
 import com.bobs.mount.PecMode;
-import com.bobs.mount.TrackingMode;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by dokeeffe on 1/8/17.

@@ -23,9 +23,10 @@ public class Move extends MountCommand {
 
     /**
      * Constructor
+     *
      * @param mount
-     * @param rate 0 to 9 (0 means stop)
-     * @param axis the Axis ALT or AZ
+     * @param rate     0 to 9 (0 means stop)
+     * @param axis     the Axis ALT or AZ
      * @param positive the direction positive or negative
      */
     public Move(Mount mount, int rate, Axis axis, boolean positive) {
@@ -40,17 +41,17 @@ public class Move extends MountCommand {
         byte result[] = new byte[8];
         result[0] = MC_HC_AUX_COMMAND_PREFIX;
         result[1] = MESSAGE_LENGTH;
-        if(Axis.ALT == axis) {
+        if (Axis.ALT == axis) {
             result[2] = ALT_BOARD;
         } else {
             result[2] = AZM_BOARD;
         }
-        if(positive) {
+        if (positive) {
             result[3] = MC_MOVE_POS;
         } else {
             result[3] = MC_MOVE_NEG;
         }
-        result[4] = (byte)rate;
+        result[4] = (byte) rate;
         result[5] = 0x00;
         result[6] = 0x00;
         result[7] = RESPONSE_LENGTH;
@@ -59,10 +60,10 @@ public class Move extends MountCommand {
 
     @Override
     public void handleMessage(byte[] message) {
-        if(message[0]!=ACK) {
+        if (message[0] != ACK) {
             LOGGER.error("Expected ACK, but got {}", DatatypeConverter.printHexBinary(message));
         } else {
-            if(rate==0) {
+            if (rate == 0) {
                 mount.setTrackingState(TrackingState.TRACKING);
             } else {
                 mount.setTrackingState(TrackingState.SLEWING);

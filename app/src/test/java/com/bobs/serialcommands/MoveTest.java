@@ -1,14 +1,12 @@
 package com.bobs.serialcommands;
 
 import com.bobs.mount.Axis;
-import com.bobs.mount.Mount;
 import com.bobs.mount.TrackingState;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
 
-import static com.bobs.serialcommands.MountCommand.ACK;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -45,21 +43,21 @@ public class MoveTest extends BaseCommandTest {
     public void handleMessage_ack() throws Exception {
         Move MoveCommand = new Move(mount, 1, Axis.ALT, true);
         MoveCommand.handleMessage(ACK);
-        assertEquals(TrackingState.SLEWING,mount.getTrackingState());
+        assertEquals(TrackingState.SLEWING, mount.getTrackingState());
     }
 
     @Test
     public void handleMessage_ack_for_abort() throws Exception {
         Move MoveCommand = new Move(mount, 0, Axis.ALT, true);
         MoveCommand.handleMessage(ACK);
-        assertEquals(TrackingState.TRACKING,mount.getTrackingState());
+        assertEquals(TrackingState.TRACKING, mount.getTrackingState());
     }
 
     @Test
     public void handleMessage_nonack() throws Exception {
         Move MoveCommand = new Move(mount, 1, Axis.ALT, true);
         MoveCommand.handleMessage(new byte[]{0x22});
-        assertEquals(TrackingState.IDLE,mount.getTrackingState());
+        assertEquals(TrackingState.IDLE, mount.getTrackingState());
     }
 
 }

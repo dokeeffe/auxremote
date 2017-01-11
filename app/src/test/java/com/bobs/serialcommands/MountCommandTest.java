@@ -31,7 +31,7 @@ public class MountCommandTest extends BaseCommandTest {
 
     @Test
     public void bytesToDegrees() throws Exception {
-        assertEquals(360,sut.bytesToDegrees("ffffff"),0);
+        assertEquals(360, sut.bytesToDegrees("ffffff"), 0);
     }
 
     @Test

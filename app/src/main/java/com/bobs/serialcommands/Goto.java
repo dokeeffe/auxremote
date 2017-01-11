@@ -23,6 +23,7 @@ public class Goto extends MountCommand {
 
     /**
      * Constructor
+     *
      * @param mount
      * @param position
      * @param axis
@@ -41,12 +42,12 @@ public class Goto extends MountCommand {
         byte result[] = new byte[8];
         result[0] = MC_HC_AUX_COMMAND_PREFIX;
         result[1] = MESSAGE_LENGTH;
-        if(Axis.ALT == axis) {
+        if (Axis.ALT == axis) {
             result[2] = ALT_BOARD;
         } else {
             result[2] = AZM_BOARD;
         }
-        if(fast) {
+        if (fast) {
             result[3] = MC_GOTO_FAST;
         } else {
             result[3] = MC_GOTO_SLOW;
@@ -60,7 +61,7 @@ public class Goto extends MountCommand {
 
     @Override
     public void handleMessage(byte[] message) {
-        if(message[0]!=ACK) {
+        if (message[0] != ACK) {
             LOGGER.error("Expected ACK, but got {}", DatatypeConverter.printHexBinary(message));
         } else {
             mount.setTrackingState(TrackingState.SLEWING);

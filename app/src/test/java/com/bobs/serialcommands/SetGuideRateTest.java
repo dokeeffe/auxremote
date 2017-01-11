@@ -9,7 +9,7 @@ import javax.xml.bind.DatatypeConverter;
 
 import static com.bobs.serialcommands.MountCommand.ALT_BOARD;
 import static com.bobs.serialcommands.MountCommand.AZM_BOARD;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by dokeeffe on 1/8/17.

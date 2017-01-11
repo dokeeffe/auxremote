@@ -29,17 +29,17 @@ public class FakeAuxAdapter implements NexstarAuxAdapter {
     @Override
     public void queueCommand(MountCommand command) {
         commands.add(command);
-        if(command instanceof QuerySlewDone) {
-            if(command.getCommand()[2]==AZM_BOARD) {
+        if (command instanceof QuerySlewDone) {
+            if (command.getCommand()[2] == AZM_BOARD) {
                 mount.setAzSlewInProgress(false);
             } else {
                 mount.setAltSlewInProgress(false);
             }
         }
-        if(command instanceof PecQueryAtIndex) {
+        if (command instanceof PecQueryAtIndex) {
             mount.setPecIndexFound(true);
         }
-        if(command instanceof PecQueryRecordDone) {
+        if (command instanceof PecQueryRecordDone) {
             mount.setPecMode(PecMode.IDLE);
         }
     }

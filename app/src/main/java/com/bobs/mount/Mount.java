@@ -18,9 +18,8 @@ import java.io.Serializable;
  * This is a Singleton bean, there is only one instance in the application.
  * This bean is managed by the {@link MountService}
  * The bean is serialised when the application shuts down and de-serialised on startup.
- *
+ * <p>
  * TODO: cleanup mess of objects and primitives used
- *
  */
 @Component
 public class Mount implements Serializable {
@@ -29,8 +28,8 @@ public class Mount implements Serializable {
 
     private String version;
     private TrackingState trackingState = TrackingState.IDLE;
-    private Double raHours=0.0;
-    private Double decDegrees=0.0;
+    private Double raHours = 0.0;
+    private Double decDegrees = 0.0;
     private TrackingMode trackingMode; //eq north will be the only tested one.
     private Double gpsLat;
     private Double gpsLon;
@@ -54,7 +53,7 @@ public class Mount implements Serializable {
     @PostConstruct
     public void loadState() {
         try {
-            File persistanceStore = new File(System.getProperty("user.home"),"auxremote-mount.ser");
+            File persistanceStore = new File(System.getProperty("user.home"), "auxremote-mount.ser");
             byte[] mountState = FileCopyUtils.copyToByteArray(persistanceStore);
             Mount persisted = (Mount) SerializationUtils.deserialize(mountState);
             BeanUtils.copyProperties(persisted, this);
@@ -63,18 +62,18 @@ public class Mount implements Serializable {
             this.gpsConnected = false;
             this.aligned = false;
         } catch (Exception e) {
-            LOGGER.error("Error restoring mount state from persistance store. Not a big problem. Using defaults.",e);
+            LOGGER.error("Error restoring mount state from persistance store. Not a big problem. Using defaults.", e);
         }
     }
 
     @PreDestroy
     public void saveState() {
         byte[] mountState = SerializationUtils.serialize(this);
-        File persistanceStore = new File(System.getProperty("user.home"),"auxremote-mount.ser");
+        File persistanceStore = new File(System.getProperty("user.home"), "auxremote-mount.ser");
         try {
             FileCopyUtils.copy(mountState, persistanceStore);
         } catch (IOException e) {
-            LOGGER.warn("Error saving mount state",e);
+            LOGGER.warn("Error saving mount state", e);
         }
     }
 

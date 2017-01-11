@@ -28,6 +28,7 @@ public class AuxSerialPortEventListener implements SerialPortEventListener {
 
     /**
      * Constructor passed the SerialPort and the Queue to place complete messages on.
+     *
      * @param serialPort
      * @param queue
      */
@@ -38,6 +39,7 @@ public class AuxSerialPortEventListener implements SerialPortEventListener {
 
     /**
      * Handle a serial event. The Event may not contain the complete message. However if it ends in 0x23 it is considered complete
+     *
      * @param event
      */
     @Override

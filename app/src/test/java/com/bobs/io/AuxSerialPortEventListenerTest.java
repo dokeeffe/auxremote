@@ -9,8 +9,7 @@ import org.junit.Test;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,7 +34,7 @@ public class AuxSerialPortEventListenerTest {
         SerialPortEvent event = mock(SerialPortEvent.class);
         when(event.getEventValue()).thenReturn(100);
         when(event.isRXCHAR()).thenReturn(true);
-        when(serialPort.readBytes(100)).thenReturn(new byte[]{0x01,0x02});
+        when(serialPort.readBytes(100)).thenReturn(new byte[]{0x01, 0x02});
         sut.serialEvent(event);
         assertEquals(0, queue.size());
 
@@ -46,11 +45,11 @@ public class AuxSerialPortEventListenerTest {
         SerialPortEvent event = mock(SerialPortEvent.class);
         when(event.getEventValue()).thenReturn(100);
         when(event.isRXCHAR()).thenReturn(true);
-        when(serialPort.readBytes(100)).thenReturn(new byte[]{0x01,0x02, 0x23});
+        when(serialPort.readBytes(100)).thenReturn(new byte[]{0x01, 0x02, 0x23});
         sut.serialEvent(event);
         assertEquals(1, queue.size());
         byte[] message = (byte[]) queue.poll();
-        assertEquals(2,message.length);
+        assertEquals(2, message.length);
         assertEquals(0x01, message[0]);
         assertEquals(0x02, message[1]);
 
@@ -61,14 +60,14 @@ public class AuxSerialPortEventListenerTest {
         SerialPortEvent event = mock(SerialPortEvent.class);
         when(event.getEventValue()).thenReturn(100);
         when(event.isRXCHAR()).thenReturn(true);
-        when(serialPort.readBytes(100)).thenReturn(new byte[]{0x01,0x02});
+        when(serialPort.readBytes(100)).thenReturn(new byte[]{0x01, 0x02});
         sut.serialEvent(event);
         when(serialPort.readBytes(100)).thenReturn(new byte[]{0x23});
         sut.serialEvent(event);
 
         assertEquals(1, queue.size());
         byte[] message = (byte[]) queue.poll();
-        assertEquals(2,message.length);
+        assertEquals(2, message.length);
         assertEquals(0x01, message[0]);
         assertEquals(0x02, message[1]);
     }
@@ -78,7 +77,7 @@ public class AuxSerialPortEventListenerTest {
         SerialPortEvent event = mock(SerialPortEvent.class);
         when(event.getEventValue()).thenReturn(100);
         when(event.isRXCHAR()).thenReturn(true);
-        when(serialPort.readBytes(100)).thenThrow(new SerialPortException("","",""));
+        when(serialPort.readBytes(100)).thenThrow(new SerialPortException("", "", ""));
         sut.serialEvent(event);
     }
 

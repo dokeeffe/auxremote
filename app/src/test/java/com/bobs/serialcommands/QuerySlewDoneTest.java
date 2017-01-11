@@ -1,7 +1,6 @@
 package com.bobs.serialcommands;
 
 import com.bobs.mount.Axis;
-import com.bobs.mount.Mount;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -71,8 +71,8 @@ public class AltAz {
         double lst = localSiderealTime(utc, lon);
         double meridianOffset = (nexstarAzimuth - 180) * -1;
         LOGGER.debug("RA from nexstar mount az azis={}, meridianOffset={}", nexstarAzimuth, meridianOffset);
-        Target target = new Target((((lst + meridianOffset)+360)%360), nexstarAlt, 0.0, 0.0);
-        LOGGER.debug("radeg {}",target.getRaDeg());
+        Target target = new Target((((lst + meridianOffset) + 360) % 360), nexstarAlt, 0.0, 0.0);
+        LOGGER.debug("radeg {}", target.getRaDeg());
         target.setRaHours(convertRaDegToHours(target.getRaDeg()));
         return target;
     }
@@ -125,19 +125,20 @@ public class AltAz {
      * Similar to latitude on earth. Anything past 90deg is beyond the pole and down the other side...
      * Convert all angles outside of the +-90 range to be between +-90deg
      * Example 355deg would be -5deg. 91deg would be 89.
+     *
      * @param positionAngle
      * @return
      */
     public double convertPositionAngleToDecForEqNorth(double positionAngle) {
-        if(positionAngle > 180) {
-            positionAngle = 180-(positionAngle-180);
-            positionAngle = positionAngle*-1;
+        if (positionAngle > 180) {
+            positionAngle = 180 - (positionAngle - 180);
+            positionAngle = positionAngle * -1;
         }
-        if(positionAngle > 90) {
-            positionAngle = 90-(positionAngle-90);
+        if (positionAngle > 90) {
+            positionAngle = 90 - (positionAngle - 90);
         }
-        if(positionAngle < -90) {
-            positionAngle = -90-(positionAngle+90);
+        if (positionAngle < -90) {
+            positionAngle = -90 - (positionAngle + 90);
         }
         return positionAngle;
     }
@@ -146,11 +147,12 @@ public class AltAz {
      * For EQ north mounted telescopes. 0 deg altitude corresponds to the celestial equator. 90 the pole.
      * Similar to latitude on earth. Anything past 90deg is beyond the pole and down the other side...
      * This will convert an RA to the telescope ALT angle when in EQ north. For example, DEC -5deg = 355deg
+     *
      * @param dec
      * @return
      */
     public double convertDecToPositionAngleForEqNorth(double dec) {
-        if(dec<0) {
+        if (dec < 0) {
             dec = 360 + dec;
         }
         return dec;

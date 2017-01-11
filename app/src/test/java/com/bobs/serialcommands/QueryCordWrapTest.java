@@ -1,12 +1,10 @@
 package com.bobs.serialcommands;
 
-import com.bobs.mount.Mount;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
 
-import static com.bobs.serialcommands.MountCommand.OPERATION_COMPLETE;
 import static org.junit.Assert.*;
 
 /**

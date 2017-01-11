@@ -64,7 +64,7 @@ public class SetGuideRate extends MountCommand {
 
     @Override
     public void handleMessage(byte[] message) {
-        if(OPERATION_COMPLETE==message[0]) {
+        if (OPERATION_COMPLETE == message[0]) {
             if (this.guideRate == GuideRate.OFF) {
                 mount.setTrackingState(TrackingState.IDLE);
             } else {

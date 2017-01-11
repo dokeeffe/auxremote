@@ -34,9 +34,9 @@ public class PecQueryRecordDone extends MountCommand {
 
     @Override
     public void handleMessage(byte[] message) {
-        if(OPERATION_COMPLETE==message[0]) {
+        if (OPERATION_COMPLETE == message[0]) {
             mount.setPecMode(PecMode.IDLE);
-        } else if(OPERATION_PENDING==message[0]) {
+        } else if (OPERATION_PENDING == message[0]) {
             mount.setPecMode(PecMode.RECORDING);
         } else {
             LOGGER.error("Unexpected response for MC_PEC_RECORD_DONE command {}", message[0]);

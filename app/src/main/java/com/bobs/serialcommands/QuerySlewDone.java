@@ -25,7 +25,7 @@ public class QuerySlewDone extends MountCommand {
         byte result[] = new byte[8];
         result[0] = MC_HC_AUX_COMMAND_PREFIX;
         result[1] = MESSAGE_LENGTH;
-        if(Axis.ALT == axis) {
+        if (Axis.ALT == axis) {
             result[2] = ALT_BOARD;
         } else {
             result[2] = AZM_BOARD;
@@ -41,12 +41,12 @@ public class QuerySlewDone extends MountCommand {
     @Override
     public void handleMessage(byte[] message) {
         boolean slewing = true;
-        if(OPERATION_COMPLETE == message[0]) {
+        if (OPERATION_COMPLETE == message[0]) {
             slewing = false;
         } else {
             LOGGER.info("{} Slew Complete", axis);
         }
-        if(Axis.ALT == axis) {
+        if (Axis.ALT == axis) {
             mount.setAltSlewInProgress(slewing);
         } else {
             mount.setAzSlewInProgress(slewing);

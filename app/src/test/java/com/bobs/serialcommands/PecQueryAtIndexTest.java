@@ -1,6 +1,5 @@
 package com.bobs.serialcommands;
 
-import com.bobs.mount.Mount;
 import com.bobs.mount.PecMode;
 import org.junit.Before;
 import org.junit.Test;

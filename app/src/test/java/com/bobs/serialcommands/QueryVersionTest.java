@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by dokeeffe on 1/8/17.
@@ -28,7 +28,7 @@ public class QueryVersionTest extends BaseCommandTest {
     @Test
     public void handleMessage() throws Exception {
         sut.handleMessage(new byte[]{0x21, 0x22});
-        assertEquals("2122",mount.getVersion());
+        assertEquals("2122", mount.getVersion());
     }
 
 }

@@ -9,7 +9,7 @@ public abstract class MountCommand {
 
     public static final byte ACK = 0x01;
     public static final byte OPERATION_PENDING = 0x00;
-    public static final byte OPERATION_COMPLETE = (byte)0xff;
+    public static final byte OPERATION_COMPLETE = (byte) 0xff;
 
     public static final byte MC_HC_AUX_COMMAND_PREFIX = 0x50;
     public static final byte MC_GET_POSITION = 0x01;

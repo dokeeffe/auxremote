@@ -43,7 +43,7 @@ public class QueryAltMcPosition extends MountCommand {
         double positionAngle = bytesToDegrees(hex);
         if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
             double dec = altAz.convertPositionAngleToDecForEqNorth(positionAngle);
-            LOGGER.debug("DEC {}",dec);
+            LOGGER.debug("DEC {}", dec);
             mount.setDecDegrees(dec);
         } else {
             throw new UnsupportedOperationException("Currently only EQ_NORTH is supported.");

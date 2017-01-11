@@ -34,10 +34,10 @@ public class PecQueryAtIndex extends MountCommand {
 
     @Override
     public void handleMessage(byte[] message) {
-        if(OPERATION_COMPLETE==message[0]) {
+        if (OPERATION_COMPLETE == message[0]) {
             mount.setPecMode(PecMode.IDLE);
             mount.setPecIndexFound(true);
-        } else if(OPERATION_PENDING==message[0]) {
+        } else if (OPERATION_PENDING == message[0]) {
             mount.setPecMode(PecMode.INDEXING);
             mount.setPecIndexFound(false);
         } else {

@@ -34,10 +34,10 @@ public class PecStartPlayback extends MountCommand {
 
     @Override
     public void handleMessage(byte[] message) {
-        if(ACK==message[0]) {
+        if (ACK == message[0]) {
             mount.setPecMode(PecMode.PLAYING);
         } else {
-            LOGGER.error("Unexpected message for MC_PEC_PLAYBACK command {}",message[0]);
+            LOGGER.error("Unexpected message for MC_PEC_PLAYBACK command {}", message[0]);
         }
     }
 }

@@ -39,7 +39,7 @@ public class SetAzMcPosition extends MountCommand {
 
     @Override
     public void handleMessage(byte[] message) {
-        if(message[0]!=ACK) {
+        if (message[0] != ACK) {
             LOGGER.error("Expected ACK, but got {}", DatatypeConverter.printHexBinary(message));
         }
     }

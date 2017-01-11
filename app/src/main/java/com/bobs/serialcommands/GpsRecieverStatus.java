@@ -8,7 +8,6 @@ import javax.xml.bind.DatatypeConverter;
 
 /**
  * Build a command to send to the GPS module to query status.
- *
  */
 public class GpsRecieverStatus extends MountCommand {
 

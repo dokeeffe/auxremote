@@ -23,6 +23,7 @@ public class MountController {
 
     /**
      * GET the {@link Mount}s current state.
+     *
      * @return
      */
     @GetMapping("")
@@ -39,6 +40,7 @@ public class MountController {
 
     /**
      * Handle POST to connect. This will delegate to the service to connect to the mount over serial and query state.
+     *
      * @return
      */
     @PostMapping("/connect")
@@ -73,6 +75,7 @@ public class MountController {
 
     /**
      * Set the mount service.
+     *
      * @param mountService
      */
     public void setMountService(MountService mountService) {

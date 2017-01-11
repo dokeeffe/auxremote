@@ -1,6 +1,5 @@
 package com.bobs.serialcommands;
 
-import com.bobs.mount.Mount;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,7 +11,7 @@ import static org.junit.Assert.assertEquals;
  * Created by dokeeffe on 26/12/16.
  */
 public class GpsRecieverStatusTest extends BaseCommandTest {
-    
+
     private GpsRecieverStatus sut;
 
     @Before
@@ -28,7 +27,7 @@ public class GpsRecieverStatusTest extends BaseCommandTest {
 
     @Test
     public void handleMessage() throws Exception {
-        sut.handleMessage(new byte[]{0x01,0x00});
-        assertEquals("Filter Reset To Raw GPS Solution",mount.getGpsReceiverStatus());
+        sut.handleMessage(new byte[]{0x01, 0x00});
+        assertEquals("Filter Reset To Raw GPS Solution", mount.getGpsReceiverStatus());
     }
 }

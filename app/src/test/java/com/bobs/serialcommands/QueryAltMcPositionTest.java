@@ -1,6 +1,5 @@
 package com.bobs.serialcommands;
 
-import com.bobs.mount.Mount;
 import com.bobs.mount.TrackingMode;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,20 +29,20 @@ public class QueryAltMcPositionTest extends BaseCommandTest {
     @Test
     public void handleMessage() {
         byte[] message = new byte[4];
-        message[0] = (byte)0x01;
-        message[1] = (byte)0xB8;
-        message[2] = (byte)0xCF;
+        message[0] = (byte) 0x01;
+        message[1] = (byte) 0xB8;
+        message[2] = (byte) 0xCF;
         sut.handleMessage(message);
-        assertEquals(-79.8,mount.getDecDegrees(),0.1);
+        assertEquals(-79.8, mount.getDecDegrees(), 0.1);
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void handleMessage_eqSouthMode() {
         mount.setTrackingMode(TrackingMode.EQ_SOUTH);
         byte[] message = new byte[4];
-        message[0] = (byte)0x20;
-        message[1] = (byte)0xB8;
-        message[2] = (byte)0xCF;
+        message[0] = (byte) 0x20;
+        message[1] = (byte) 0xB8;
+        message[2] = (byte) 0xCF;
         sut.handleMessage(message);
     }
 }

@@ -1,13 +1,11 @@
 package com.bobs.serialcommands;
 
-import com.bobs.mount.Mount;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by dokeeffe on 1/8/17.
@@ -30,11 +28,11 @@ public class QueryCordWrapPosTest extends BaseCommandTest {
     @Test
     public void handleMessage() throws Exception {
         byte[] message = new byte[3];
-        message[0] = (byte)0x20;
-        message[1] = (byte)0xB8;
-        message[2] = (byte)0xCF;
+        message[0] = (byte) 0x20;
+        message[1] = (byte) 0xB8;
+        message[2] = (byte) 0xCF;
         sut.handleMessage(message);
-        assertEquals(46,mount.getCordWrapPosition(),0.1);
+        assertEquals(46, mount.getCordWrapPosition(), 0.1);
     }
 
 }

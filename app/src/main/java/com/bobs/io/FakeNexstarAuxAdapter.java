@@ -1,21 +1,18 @@
 package com.bobs.io;
 
 import com.bobs.serialcommands.MountCommand;
-import jssc.SerialPort;
 import jssc.SerialPortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
-import javax.xml.bind.DatatypeConverter;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
  * A sumilator adapter for testing clients such as INDI
- *
  */
 @Component
 public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
@@ -43,7 +40,6 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
     }
 
 
-
     /**
      * Start this adapter. This normally needs to start in a new thread.
      */
@@ -56,10 +52,10 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
             try {
                 command = inputChannel.poll(100, TimeUnit.DAYS);
             } catch (InterruptedException e) {
-                LOGGER.error("error reading command",e);
+                LOGGER.error("error reading command", e);
             }
             byte[] cmd = command.getCommand();
-            LOGGER.info("Fake adapter processing {}",command.getClass());
+            LOGGER.info("Fake adapter processing {}", command.getClass());
         }
     }
 
@@ -76,7 +72,7 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
 
     @Override
     public void waitForQueueEmpty() {
-        while(!this.inputChannel.isEmpty()) {
+        while (!this.inputChannel.isEmpty()) {
             try {
                 Thread.sleep(200);
             } catch (InterruptedException e) {
@@ -97,6 +93,7 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
 
     /**
      * Set the name of the port to use.
+     *
      * @param serialPortName
      */
     @Override

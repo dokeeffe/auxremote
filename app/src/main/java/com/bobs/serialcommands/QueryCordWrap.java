@@ -33,7 +33,7 @@ public class QueryCordWrap extends MountCommand {
 
     @Override
     public void handleMessage(byte[] message) {
-        if(message[0]==OPERATION_COMPLETE) {
+        if (message[0] == OPERATION_COMPLETE) {
             LOGGER.debug("Cordwrap on");
             mount.setCordWrapEnabled(true);
         } else {

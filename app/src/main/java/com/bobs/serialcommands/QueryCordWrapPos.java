@@ -36,9 +36,9 @@ public class QueryCordWrapPos extends MountCommand {
     @Override
     public void handleMessage(byte[] message) {
         String hex = DatatypeConverter.printHexBinary(message);
-        LOGGER.debug("MC_GET_CORDWRAP_POS resp data = {}",hex);
+        LOGGER.debug("MC_GET_CORDWRAP_POS resp data = {}", hex);
         double cordwrapPos = bytesToDegrees(hex);
-        LOGGER.debug("MC_GET_CORDWRAP_POS AZ angle = {}",cordwrapPos);
+        LOGGER.debug("MC_GET_CORDWRAP_POS AZ angle = {}", cordwrapPos);
         mount.setCordWrapPosition(cordwrapPos);
     }
 }

@@ -3,8 +3,6 @@ package com.bobs.io;
 import com.bobs.serialcommands.MountCommand;
 import jssc.SerialPortException;
 
-import javax.annotation.PreDestroy;
-
 /**
  * Created by dokeeffe on 1/5/17.
  */

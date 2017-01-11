@@ -42,10 +42,10 @@ public class QueryAzMcPosition extends MountCommand {
         AltAz altAz = new AltAz();
         String hex = DatatypeConverter.printHexBinary(message);
         double azimuthDegreesReportedByMount = bytesToDegrees(hex);
-        LOGGER.debug("ALTAZ raw data = {}",azimuthDegreesReportedByMount);
+        LOGGER.debug("ALTAZ raw data = {}", azimuthDegreesReportedByMount);
         if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
             Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getGpsLon(), azimuthDegreesReportedByMount, mount.getDecDegrees());
-            LOGGER.debug("RA {}",position.getRaHours());
+            LOGGER.debug("RA {}", position.getRaHours());
             mount.setRaHours(position.getRaHours());
         } else {
             throw new UnsupportedOperationException("Currently only EQ_NORTH is supported.");

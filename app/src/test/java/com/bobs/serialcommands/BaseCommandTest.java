@@ -2,7 +2,6 @@ package com.bobs.serialcommands;
 
 import com.bobs.mount.Mount;
 import com.bobs.mount.TrackingMode;
-import org.junit.Before;
 
 import static org.mockito.Mockito.mock;
 

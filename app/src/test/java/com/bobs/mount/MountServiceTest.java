@@ -1,22 +1,16 @@
 package com.bobs.mount;
 
 import com.bobs.coord.Target;
-import com.bobs.io.NexstarAuxAdapter;
-import com.bobs.io.NexstarAuxSerialAdapter;
 import com.bobs.serialcommands.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
-import sun.reflect.Reflection;
 
 import javax.xml.bind.DatatypeConverter;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
 /**
  * Created by dokeeffe on 31/12/16.
@@ -33,8 +27,8 @@ public class MountServiceTest {
         fakeAuxAdapter = new FakeAuxAdapter();
         mount = new Mount();
         fakeAuxAdapter.setMount(mount);
-        ReflectionTestUtils.setField(mountService,"mount", mount);
-        ReflectionTestUtils.setField(mountService,"auxAdapter", fakeAuxAdapter);
+        ReflectionTestUtils.setField(mountService, "mount", mount);
+        ReflectionTestUtils.setField(mountService, "auxAdapter", fakeAuxAdapter);
         mount.setTrackingState(TrackingState.TRACKING);
         mount.setTrackingMode(TrackingMode.EQ_NORTH);
         mount.setGpsLat(52.2);
@@ -212,10 +206,10 @@ public class MountServiceTest {
         boolean startPosDir = (boolean) ReflectionTestUtils.getField(queuedCommands.get(0), "positive");
         int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
         int stopRate = (int) ReflectionTestUtils.getField(queuedCommands.get(1), "rate");
-        assertEquals(1,startRate);
-        assertEquals(Axis.AZ,startAxis);
+        assertEquals(1, startRate);
+        assertEquals(Axis.AZ, startAxis);
         assertTrue(startPosDir);
-        assertEquals(0,stopRate);
+        assertEquals(0, stopRate);
     }
 
     @Test
@@ -234,10 +228,10 @@ public class MountServiceTest {
         boolean startPosDir = (boolean) ReflectionTestUtils.getField(queuedCommands.get(0), "positive");
         int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
         int stopRate = (int) ReflectionTestUtils.getField(queuedCommands.get(1), "rate");
-        assertEquals(1,startRate);
-        assertEquals(Axis.AZ,startAxis);
+        assertEquals(1, startRate);
+        assertEquals(Axis.AZ, startAxis);
         assertFalse(startPosDir);
-        assertEquals(0,stopRate);
+        assertEquals(0, stopRate);
     }
 
     @Test
@@ -256,10 +250,10 @@ public class MountServiceTest {
         boolean startPosDir = (boolean) ReflectionTestUtils.getField(queuedCommands.get(0), "positive");
         int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
         int stopRate = (int) ReflectionTestUtils.getField(queuedCommands.get(1), "rate");
-        assertEquals(1,startRate);
-        assertEquals(Axis.ALT,startAxis);
+        assertEquals(1, startRate);
+        assertEquals(Axis.ALT, startAxis);
         assertTrue(startPosDir);
-        assertEquals(0,stopRate);
+        assertEquals(0, stopRate);
     }
 
     @Test
@@ -278,10 +272,10 @@ public class MountServiceTest {
         boolean startPosDir = (boolean) ReflectionTestUtils.getField(queuedCommands.get(0), "positive");
         int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
         int stopRate = (int) ReflectionTestUtils.getField(queuedCommands.get(1), "rate");
-        assertEquals(1,startRate);
-        assertEquals(Axis.ALT,startAxis);
+        assertEquals(1, startRate);
+        assertEquals(Axis.ALT, startAxis);
         assertFalse(startPosDir);
-        assertEquals(0,stopRate);
+        assertEquals(0, stopRate);
     }
 
     @Test
@@ -300,8 +294,8 @@ public class MountServiceTest {
         Axis startAxis = (Axis) ReflectionTestUtils.getField(queuedCommands.get(0), "axis");
         boolean startPosDir = (boolean) ReflectionTestUtils.getField(queuedCommands.get(0), "positive");
         int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
-        assertEquals(3,startRate);
-        assertEquals(Axis.ALT,startAxis);
+        assertEquals(3, startRate);
+        assertEquals(Axis.ALT, startAxis);
         assertFalse(startPosDir);
     }
 
@@ -321,8 +315,8 @@ public class MountServiceTest {
         Axis startAxis = (Axis) ReflectionTestUtils.getField(queuedCommands.get(0), "axis");
         boolean startPosDir = (boolean) ReflectionTestUtils.getField(queuedCommands.get(0), "positive");
         int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
-        assertEquals(3,startRate);
-        assertEquals(Axis.ALT,startAxis);
+        assertEquals(3, startRate);
+        assertEquals(Axis.ALT, startAxis);
         assertTrue(startPosDir);
     }
 
@@ -342,8 +336,8 @@ public class MountServiceTest {
         Axis startAxis = (Axis) ReflectionTestUtils.getField(queuedCommands.get(0), "axis");
         boolean startPosDir = (boolean) ReflectionTestUtils.getField(queuedCommands.get(0), "positive");
         int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
-        assertEquals(3,startRate);
-        assertEquals(Axis.AZ,startAxis);
+        assertEquals(3, startRate);
+        assertEquals(Axis.AZ, startAxis);
         assertFalse(startPosDir);
     }
 
@@ -363,8 +357,8 @@ public class MountServiceTest {
         Axis startAxis = (Axis) ReflectionTestUtils.getField(queuedCommands.get(0), "axis");
         boolean startPosDir = (boolean) ReflectionTestUtils.getField(queuedCommands.get(0), "positive");
         int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
-        assertEquals(3,startRate);
-        assertEquals(Axis.AZ,startAxis);
+        assertEquals(3, startRate);
+        assertEquals(Axis.AZ, startAxis);
         assertTrue(startPosDir);
     }
 
@@ -385,26 +379,26 @@ public class MountServiceTest {
         Axis ax1 = (Axis) ReflectionTestUtils.getField(queuedCommands.get(0), "axis");
         boolean posDir1 = (boolean) ReflectionTestUtils.getField(queuedCommands.get(0), "positive");
         int rate1 = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
-        assertEquals(0,rate1);
-        assertEquals(Axis.ALT,ax1);
+        assertEquals(0, rate1);
+        assertEquals(Axis.ALT, ax1);
         assertFalse(posDir1);
         Axis ax2 = (Axis) ReflectionTestUtils.getField(queuedCommands.get(1), "axis");
         boolean posDir2 = (boolean) ReflectionTestUtils.getField(queuedCommands.get(1), "positive");
         int rate2 = (int) ReflectionTestUtils.getField(queuedCommands.get(1), "rate");
-        assertEquals(0,rate2);
-        assertEquals(Axis.AZ,ax2);
+        assertEquals(0, rate2);
+        assertEquals(Axis.AZ, ax2);
         assertFalse(posDir2);
     }
 
     @Test
     public void getMount() throws Exception {
-        assertEquals(mount,mountService.getMount());
+        assertEquals(mount, mountService.getMount());
     }
 
     @Test(expected = IllegalStateException.class)
     public void getMount_notConnected_throwsException() throws Exception {
         fakeAuxAdapter.setConnected(false);
-        assertEquals(mount,mountService.getMount());
+        assertEquals(mount, mountService.getMount());
     }
 
     @Test
@@ -420,7 +414,7 @@ public class MountServiceTest {
         Mount updated = new Mount();
         updated.setSlewLimitAlt(11.11);
         mountService.updateMount(updated);
-        assertEquals(11.11, mount.getSlewLimitAlt(),0);
+        assertEquals(11.11, mount.getSlewLimitAlt(), 0);
     }
 
     @Test
@@ -436,7 +430,7 @@ public class MountServiceTest {
         Mount updated = new Mount();
         updated.setSlewLimitAz(22.22);
         mountService.updateMount(updated);
-        assertEquals(22.22,mount.getSlewLimitAz(),0);
+        assertEquals(22.22, mount.getSlewLimitAz(), 0);
     }
 
     @Test

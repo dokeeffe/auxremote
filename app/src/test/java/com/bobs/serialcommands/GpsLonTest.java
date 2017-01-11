@@ -1,6 +1,5 @@
 package com.bobs.serialcommands;
 
-import com.bobs.mount.Mount;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,8 +27,8 @@ public class GpsLonTest extends BaseCommandTest {
 
     @Test
     public void handleMessage() throws Exception {
-        sut.handleMessage(new byte[]{0x01,0x23,0x03});
-        assertEquals(1.5,mount.getGpsLon(),0.1);
+        sut.handleMessage(new byte[]{0x01, 0x23, 0x03});
+        assertEquals(1.5, mount.getGpsLon(), 0.1);
     }
 
 }

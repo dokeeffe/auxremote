@@ -45,12 +45,12 @@ public class NexstarAuxSerialAdapterIntegrationTest {
         sut.queueCommand(new SetGuideRate(mount, MountCommand.ALT_BOARD, GuideRate.OFF));
         sut.queueCommand(new SetGuideRate(mount, MountCommand.AZM_BOARD, GuideRate.SIDEREAL));
 
-        while(true) {
+        while (true) {
             Thread.sleep(2000);
             sut.queueCommand(new QueryAzMcPosition(mount));
             sut.queueCommand(new QueryAltMcPosition(mount));
-            System.out.println("RA:"+mount.getRaHours());
-            System.out.println("DEC:"+mount.getDecDegrees());
+            System.out.println("RA:" + mount.getRaHours());
+            System.out.println("DEC:" + mount.getDecDegrees());
         }
 
     }
@@ -64,31 +64,31 @@ public class NexstarAuxSerialAdapterIntegrationTest {
         sut.queueCommand(new QueryAzMcPosition(mount));
         sut.queueCommand(new QueryAltMcPosition(mount));
         Thread.sleep(2000);
-        System.out.println("RA:"+mount.getRaHours());
-        System.out.println("DEC:"+mount.getDecDegrees());
+        System.out.println("RA:" + mount.getRaHours());
+        System.out.println("DEC:" + mount.getDecDegrees());
         sut.queueCommand(new SetAltMcPosition(mount, 16.540));
         sut.queueCommand(new SetAzMcPosition(mount, 203.932));
         Thread.sleep(2000);
         sut.queueCommand(new QueryAzMcPosition(mount));
         sut.queueCommand(new QueryAltMcPosition(mount));
         Thread.sleep(2000);
-        System.out.println("RA:"+mount.getRaHours());
-        System.out.println("DEC:"+mount.getDecDegrees());
+        System.out.println("RA:" + mount.getRaHours());
+        System.out.println("DEC:" + mount.getDecDegrees());
         sut.stop();
 
     }
 
     @Test
     public void sendGpsCommands() throws Exception {
-        while(true) {
+        while (true) {
             sut.queueCommand(new GpsLinked(mount));
             sut.queueCommand(new GpsLat(mount));
             sut.queueCommand(new GpsLon(mount));
             sut.queueCommand(new GpsRecieverStatus(mount));
             Thread.sleep(10000);
-            System.out.println("GPS:"+mount.isGpsConnected());
-            System.out.println("LAT:"+mount.getGpsLat());
-            System.out.println("LON:"+mount.getGpsLon());
+            System.out.println("GPS:" + mount.isGpsConnected());
+            System.out.println("LAT:" + mount.getGpsLat());
+            System.out.println("LON:" + mount.getGpsLon());
         }
 
     }

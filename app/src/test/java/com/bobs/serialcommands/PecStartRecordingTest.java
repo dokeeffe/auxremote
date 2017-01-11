@@ -1,13 +1,11 @@
 package com.bobs.serialcommands;
 
-import com.bobs.mount.Mount;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 /**

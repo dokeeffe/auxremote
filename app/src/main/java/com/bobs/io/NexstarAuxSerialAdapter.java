@@ -6,7 +6,6 @@ import jssc.SerialPortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import javax.xml.bind.DatatypeConverter;
@@ -25,6 +24,9 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
      */
     private static final int RESPONSE_TIMEOUT_SEC = 10;
     Logger LOGGER = LoggerFactory.getLogger(NexstarAuxSerialAdapter.class);
+
+    @Autowired
+    private SerialPortBuilder serialPortBuilder;
 
     /**
      * The SerialPort used to send and recieve bytes to/from.
@@ -61,19 +63,14 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
     @Override
     public void start() {
         LOGGER.debug("Starting adapter");
-        this.serialPort = new SerialPort(serialPortName);
+        this.serialPort = serialPortBuilder.buildSerialPortForHandset(serialPortName);
         try {
             serialPort.openPort();
-            serialPort.setParams(SerialPort.BAUDRATE_9600,
-                    SerialPort.DATABITS_8,
-                    SerialPort.STOPBITS_1,
-                    SerialPort.PARITY_NONE);
-            serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
             serialPort.addEventListener(new AuxSerialPortEventListener(serialPort, outputChannel));
             connected = true;
             LOGGER.debug("port opened");
-        } catch (SerialPortException ex) {
-            LOGGER.error("failure connecting to port", ex);
+        } catch (SerialPortException e) {
+            LOGGER.error("Error opening port", e);
         }
         while (connected) {
             try {
@@ -83,14 +80,14 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
                 serialPort.writeBytes(cmd);
                 byte[] response1 = outputChannel.poll(RESPONSE_TIMEOUT_SEC, TimeUnit.SECONDS);
                 if (response1 == null || response1.length == 0) {
-                    LOGGER.error("Comms error, invalid response from mount {}", response1 );
+                    LOGGER.error("Comms error, invalid response from mount {}", response1);
                 } else {
                     try {
                         LOGGER.debug("Processing response from mount");
                         command.handleMessage(response1);
                     } catch (Exception ex) {
                         //FIXME: better error handling.. if an exception gets thrown from here then it kills the serial processor thread esentially killing the entire app
-                        LOGGER.error("Fatal error processing response",ex);
+                        LOGGER.error("Fatal error processing response", ex);
                     }
                 }
             } catch (SerialPortException e) {
@@ -115,11 +112,11 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
 
     @Override
     public void waitForQueueEmpty() {
-        while(!this.inputChannel.isEmpty()) {
+        while (!this.inputChannel.isEmpty()) {
             try {
                 Thread.sleep(200);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LOGGER.warn("Sleep interrupted");
             }
         }
     }
@@ -135,7 +132,17 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
     }
 
     /**
+     * Set the serialPortBuilder.
+     *
+     * @param serialPortBuilder
+     */
+    public void setSerialPortBuilder(SerialPortBuilder serialPortBuilder) {
+        this.serialPortBuilder = serialPortBuilder;
+    }
+
+    /**
      * Set the name of the port to use.
+     *
      * @param serialPortName
      */
     @Override

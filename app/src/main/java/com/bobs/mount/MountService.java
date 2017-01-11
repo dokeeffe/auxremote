@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
 
-import static com.bobs.coord.AltAz.*;
+import static com.bobs.coord.AltAz.ONE_DEG_IN_HOURS;
 
 /**
  * Responsible for interacting with the mount using a {@link NexstarAuxSerialAdapter}
@@ -42,15 +42,15 @@ public class MountService {
      */
     @Async
     public void sync(Target target) {
-        if(!mount.isLocationSet()) {
+        if (!mount.isLocationSet()) {
             throw new IllegalStateException("Mount location is not set. Please connect GPS or set location");
         }
         LOGGER.info("Syncing to RA:{} DEC:{}", target.getRaHours(), target.getDec());
-        if(mount.getTrackingState().equals(TrackingState.IDLE)) {
+        if (mount.getTrackingState().equals(TrackingState.IDLE)) {
             startTracking();
         }
         AltAz altAz = new AltAz();
-        if(mount.getTrackingMode().equals(TrackingMode.EQ_NORTH)) {
+        if (mount.getTrackingMode().equals(TrackingMode.EQ_NORTH)) {
             double azimuthAxisDegrees = altAz.convertRaFromDegToNexstarTicks(
                     Calendar.getInstance(),
                     mount.getGpsLon(),
@@ -74,12 +74,12 @@ public class MountService {
      */
     @Async
     public void slew(Target target) {
-        if(!mount.isAligned()) {
+        if (!mount.isAligned()) {
             throw new IllegalStateException("Please sync/align the mount before slewing");
         }
         LOGGER.info("Slewing to RA:{} DEC:{}", target.getRaHours(), target.getDec());
         mount.setTrackingState(TrackingState.SLEWING);
-        if(fastSlewRequired(mount, target)) {
+        if (fastSlewRequired(mount, target)) {
             slewAndWait(target, true);
         }
         slewAndWait(target, false);
@@ -93,8 +93,9 @@ public class MountService {
     /**
      * Blocking operation to slew and wait until complete.
      * Waits for each axis to complete in series. This is to minimise serial traffic which can interfere with slew in a dangerous way!
+     *
      * @param target the @{link Target} to slew to
-     * @param fast true/false for fast/slow slew
+     * @param fast   true/false for fast/slow slew
      */
     private void slewAndWait(Target target, boolean fast) {
         mount.setAltSlewInProgress(true);
@@ -108,11 +109,11 @@ public class MountService {
         LOGGER.debug("starting slew");
         auxAdapter.queueCommand(new Goto(mount, altitudeAxisDegrees, Axis.ALT, fast));
         auxAdapter.queueCommand(new Goto(mount, azimuthAxisDegrees, Axis.AZ, fast));
-        while(mount.isAzSlewInProgress()) {
+        while (mount.isAzSlewInProgress()) {
             auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.AZ));
             sleep(500);
         }
-        while(mount.isAltSlewInProgress()) {
+        while (mount.isAltSlewInProgress()) {
             auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.ALT));
             sleep(500);
         }
@@ -120,6 +121,7 @@ public class MountService {
 
     /**
      * Returns true if any axis needs to move more than 1 degree.
+     *
      * @param mount
      * @param target
      * @return
@@ -133,6 +135,7 @@ public class MountService {
     /**
      * Park will slew the mount to the RA/DEC specified in the {@link Target} and then stop tracking.
      * The mount state is also persisted since this is probably one of the last operations before stopping the application.
+     *
      * @param target
      * @return
      */
@@ -151,6 +154,7 @@ public class MountService {
 
     /**
      * Unpark will start tracking and sync to the location passed in the Target.
+     *
      * @param target
      */
     public void unpark(Target target) {
@@ -164,7 +168,7 @@ public class MountService {
      * TODO: Implement EQ_SOUTH and ALT_AZ tracking modes.
      */
     public void startTracking() {
-        if(TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
+        if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
             LOGGER.info("Starting EQ-NORTH sidereal tracking");
             auxAdapter.queueCommand(new SetGuideRate(mount, MountCommand.AZM_BOARD, GuideRate.OFF));
             auxAdapter.queueCommand(new SetGuideRate(mount, MountCommand.ALT_BOARD, GuideRate.OFF));
@@ -179,11 +183,12 @@ public class MountService {
     /**
      * Connect to the mount and enable some default features such as cordwrap.
      * TODO: Get GPS coordinates and block until GPS connected or timed out 2min. Then default to last saved.
+     *
      * @return
      */
     public boolean connect() {
         mount.setTrackingMode(TrackingMode.EQ_NORTH);
-        if(!auxAdapter.isConnected()) {
+        if (!auxAdapter.isConnected()) {
             auxAdapter.setSerialPortName(mount.getSerialPort());
             LOGGER.info("Starting serial adapter thread");
             new Thread(auxAdapter).start();
@@ -207,7 +212,7 @@ public class MountService {
      */
     @Scheduled(fixedDelay = 20000)
     public void queryMountState() {
-        if(auxAdapter.isConnected() && mount.getTrackingMode()!=null) {
+        if (auxAdapter.isConnected() && mount.getTrackingMode() != null) {
             if (mount.isLocationSet()) {
                 LOGGER.debug("Sending serial queueCommand to query az state");
                 auxAdapter.queueCommand(new QueryAzMcPosition(mount));
@@ -253,19 +258,20 @@ public class MountService {
         LOGGER.debug("Guiding {} {}ms", target.getMotion(), target.getGuidePulseDurationMs());
         Axis axis = Axis.ALT;
         boolean positive = true;
-        if("east".equals(target.getMotion()) || "west".equals(target.getMotion())) {
+        if ("east".equals(target.getMotion()) || "west".equals(target.getMotion())) {
             axis = Axis.AZ;
         }
-        if("east".equals(target.getMotion()) || "south".equals(target.getMotion())) {
+        if ("east".equals(target.getMotion()) || "south".equals(target.getMotion())) {
             positive = false;
         }
-        auxAdapter.queueCommand(new Move(mount,1,axis,positive));
+        auxAdapter.queueCommand(new Move(mount, 1, axis, positive));
         sleep(target.getGuidePulseDurationMs().intValue());
-        auxAdapter.queueCommand(new Move(mount,0,axis,positive));
+        auxAdapter.queueCommand(new Move(mount, 0, axis, positive));
     }
 
     /**
      * Non blocking call to send motion requests to the scope. The motion will continue until a target with a rate of 0 is passed.
+     *
      * @param target
      */
     @Async
@@ -273,27 +279,31 @@ public class MountService {
         String direction = target.getMotion();
         LOGGER.info("Motion request {}, {}", direction, target.getMotionRate());
         Axis axis = Axis.AZ;
-        if("north".equals(direction) || "south".equals(direction)) {
+        if ("north".equals(direction) || "south".equals(direction)) {
             axis = Axis.ALT;
         }
         int rate = 0;
         switch (target.getMotionRate()) {
-            case 0: rate = 1;
+            case 0:
+                rate = 1;
                 break;
-            case 1: rate = 3;
+            case 1:
+                rate = 3;
                 break;
-            case 2: rate = 6;
+            case 2:
+                rate = 6;
                 break;
-            case 3: rate = 9;
+            case 3:
+                rate = 9;
                 break;
         }
         boolean positive = "north".equals(direction) || "west".equals(direction);
         if ("abort".equals(direction)) {
             LOGGER.info("Stopping Motion request {}, {}", direction, target.getMotionRate());
-            auxAdapter.queueCommand(new Move(mount,0,Axis.ALT,positive));
-            auxAdapter.queueCommand(new Move(mount,0,Axis.AZ,positive));
+            auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, positive));
+            auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, positive));
         } else {
-            auxAdapter.queueCommand(new Move(mount,rate,axis,positive));
+            auxAdapter.queueCommand(new Move(mount, rate, axis, positive));
         }
         queryMountState();
     }
@@ -301,18 +311,20 @@ public class MountService {
 
     /**
      * Returns the current known mount state if connected.
+     *
      * @return
      */
     public Mount getMount() {
-        if(!auxAdapter.isConnected()) {
+        if (!auxAdapter.isConnected()) {
             throw new IllegalStateException("Not Connected");
         }
-        LOGGER.debug("Getting mount. RA {}, DEC {}",mount.getRaHours(), mount.getDecDegrees());
+        LOGGER.debug("Getting mount. RA {}, DEC {}", mount.getRaHours(), mount.getDecDegrees());
         return mount;
     }
 
     /**
      * Utility method for pulse guiding
+     *
      * @param ms
      */
     private void sleep(int ms) {
@@ -325,24 +337,25 @@ public class MountService {
 
     /**
      * Update the mount. Only 5 properties are updateable. SerialPort, Guiderate, SlewLimits(x2) and Pec status
+     *
      * @param newMount
      * @return
      */
     public Mount updateMount(Mount newMount) {
-        if(newMount.getSerialPort()!=null) {
+        if (newMount.getSerialPort() != null) {
             mount.setSerialPort(newMount.getSerialPort());
         }
-        if(newMount.getGuideRate()!=null) {
+        if (newMount.getGuideRate() != null) {
             mount.setGuideRate(newMount.getGuideRate());
             startTracking();
         }
-        if(newMount.getSlewLimitAlt()!=null) {
+        if (newMount.getSlewLimitAlt() != null) {
             mount.setSlewLimitAlt(newMount.getSlewLimitAlt());
         }
-        if(newMount.getSlewLimitAz()!=null) {
+        if (newMount.getSlewLimitAz() != null) {
             mount.setSlewLimitAz(newMount.getSlewLimitAz());
         }
-        if(newMount.getPecMode()!=null) {
+        if (newMount.getPecMode() != null) {
             mount.setPecMode(newMount.getPecMode());
             startPecOperation();
         }
@@ -352,20 +365,20 @@ public class MountService {
     @Async
     public void startPecOperation() {
         LOGGER.info("Setting PEC mode to {]", mount.getPecMode());
-        if(mount.getPecMode().equals(PecMode.INDEXING)) {
+        if (mount.getPecMode().equals(PecMode.INDEXING)) {
             mount.setPecIndexFound(false);
             auxAdapter.queueCommand(new PecSeekIndex(mount));
-            while(!mount.isPecIndexFound()) {
+            while (!mount.isPecIndexFound()) {
                 auxAdapter.queueCommand(new PecQueryAtIndex(mount));
             }
-        } else if(mount.getPecMode().equals(PecMode.RECORDING)) {
+        } else if (mount.getPecMode().equals(PecMode.RECORDING)) {
             auxAdapter.queueCommand(new PecStartRecording(mount));
-            while(mount.getPecMode().equals(PecMode.RECORDING)) {
+            while (mount.getPecMode().equals(PecMode.RECORDING)) {
                 auxAdapter.queueCommand(new PecQueryRecordDone(mount));
             }
-        } else if(mount.getPecMode().equals(PecMode.PLAYING)) {
+        } else if (mount.getPecMode().equals(PecMode.PLAYING)) {
             auxAdapter.queueCommand(new PecStartPlayback(mount));
-        } else if(mount.getPecMode().equals(PecMode.IDLE)) {
+        } else if (mount.getPecMode().equals(PecMode.IDLE)) {
             auxAdapter.queueCommand(new PecStopRecording(mount));
         }
 

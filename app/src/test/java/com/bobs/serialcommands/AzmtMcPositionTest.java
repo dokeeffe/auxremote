@@ -1,7 +1,5 @@
 package com.bobs.serialcommands;
 
-import com.bobs.mount.Mount;
-import com.bobs.mount.TrackingMode;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -22,8 +20,8 @@ public class AzmtMcPositionTest extends BaseCommandTest {
 
     @Test
     public void testHandleMessage() {
-        byte[] message = {(byte)0x02,(byte)0x7d,(byte)0xc6};
+        byte[] message = {(byte) 0x02, (byte) 0x7d, (byte) 0xc6};
         sut.handleMessage(message);
-        assertTrue(mount.getRaHours()>0.0 && mount.getRaHours()<24.0);
+        assertTrue(mount.getRaHours() > 0.0 && mount.getRaHours() < 24.0);
     }
 }
