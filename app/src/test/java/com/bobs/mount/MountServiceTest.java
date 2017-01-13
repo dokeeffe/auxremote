@@ -191,6 +191,23 @@ public class MountServiceTest {
     }
 
     @Test
+    public void connect_when_noLocationSet_then_gpsIsQueried() throws Exception {
+        mount.setLocationSet(false);
+        mountService.setGpsPollInterval(10); //Just to speedup test
+        mountService.connect();
+
+        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+        assertEquals(QueryCordWrapPos.class, queuedCommands.get(0).getClass());
+        assertEquals(EnableCordWrap.class, queuedCommands.get(1).getClass());
+        assertEquals(QueryCordWrap.class, queuedCommands.get(2).getClass());
+        assertEquals(GpsLinked.class, queuedCommands.get(3).getClass());
+        assertEquals(GpsLat.class, queuedCommands.get(4).getClass());
+        assertEquals(GpsLon.class, queuedCommands.get(5).getClass());
+        System.out.println(queuedCommands);
+        assertEquals(6, queuedCommands.size());
+    }
+
+    @Test
     public void guide_west() throws Exception {
         Target target = new Target();
         target.setGuidePulseDurationMs(10.0);
@@ -276,6 +293,62 @@ public class MountServiceTest {
         assertEquals(Axis.ALT, startAxis);
         assertFalse(startPosDir);
         assertEquals(0, stopRate);
+    }
+
+    @Test
+    public void moveAxis_withRate0() throws Exception {
+        Target target = new Target();
+        target.setMotion("south");
+        target.setMotionRate(0);
+
+        mountService.moveAxis(target);
+
+        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+        assertEquals(Move.class, queuedCommands.get(0).getClass());
+        int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
+        assertEquals(1, startRate);
+    }
+
+    @Test
+    public void moveAxis_withRate1() throws Exception {
+        Target target = new Target();
+        target.setMotion("south");
+        target.setMotionRate(1);
+
+        mountService.moveAxis(target);
+
+        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+        assertEquals(Move.class, queuedCommands.get(0).getClass());
+        int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
+        assertEquals(3, startRate);
+    }
+
+    @Test
+    public void moveAxis_withRate2() throws Exception {
+        Target target = new Target();
+        target.setMotion("south");
+        target.setMotionRate(2);
+
+        mountService.moveAxis(target);
+
+        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+        assertEquals(Move.class, queuedCommands.get(0).getClass());
+        int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
+        assertEquals(6, startRate);
+    }
+
+    @Test
+    public void moveAxis_withRate3() throws Exception {
+        Target target = new Target();
+        target.setMotion("south");
+        target.setMotionRate(3);
+
+        mountService.moveAxis(target);
+
+        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+        assertEquals(Move.class, queuedCommands.get(0).getClass());
+        int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
+        assertEquals(9, startRate);
     }
 
     @Test

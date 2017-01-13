@@ -1,10 +1,7 @@
 package com.bobs.mount;
 
 import com.bobs.io.NexstarAuxAdapter;
-import com.bobs.serialcommands.MountCommand;
-import com.bobs.serialcommands.PecQueryAtIndex;
-import com.bobs.serialcommands.PecQueryRecordDone;
-import com.bobs.serialcommands.QuerySlewDone;
+import com.bobs.serialcommands.*;
 import jssc.SerialPortException;
 
 import java.util.ArrayList;
@@ -41,6 +38,9 @@ public class FakeAuxAdapter implements NexstarAuxAdapter {
         }
         if (command instanceof PecQueryRecordDone) {
             mount.setPecMode(PecMode.IDLE);
+        }
+        if (command instanceof GpsLinked) {
+            mount.setGpsConnected(true);
         }
     }
 

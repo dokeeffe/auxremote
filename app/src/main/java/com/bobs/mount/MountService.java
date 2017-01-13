@@ -24,6 +24,7 @@ import static com.bobs.coord.AltAz.ONE_DEG_IN_HOURS;
 public class MountService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MountService.class);
+    private static final int DEFAULT_GPS_POLL_INTERVAL = 10000;
 
     /**
      * This is the mount that the service is managing. There is only 1 mount instance.
@@ -33,6 +34,8 @@ public class MountService {
 
     @Autowired
     private NexstarAuxAdapter auxAdapter;
+
+    private int gpsPollInterval = DEFAULT_GPS_POLL_INTERVAL;
 
     /**
      * The Sync operation is basically 'alignment'. It tells the mount where it is currently pointing.
@@ -198,9 +201,9 @@ public class MountService {
         auxAdapter.queueCommand(new EnableCordWrap(mount));
         auxAdapter.queueCommand(new QueryCordWrap(mount));
         //FIXME: remove next 3 lines, just for POC testing. Need to query the GPS module instead.
-        mount.setGpsLat(52.25288940983352);
-        mount.setGpsLon(351.639317967851);
-        mount.setLocationSet(true);
+//        mount.setGpsLat(52.25288940983352);
+//        mount.setGpsLon(351.639317967851);
+//        mount.setLocationSet(true);
         if (!mount.isLocationSet()) {
             waitForGps();
         }
@@ -234,7 +237,7 @@ public class MountService {
             LOGGER.info("GPS locating satellites");
             auxAdapter.queueCommand(new GpsLinked(mount));
             if (!mount.isGpsConnected()) {
-                sleep(7000);
+                sleep(gpsPollInterval);
             } else {
                 LOGGER.info("GPS connected");
                 auxAdapter.queueCommand(new GpsLat(mount));
@@ -381,6 +384,13 @@ public class MountService {
         } else if (mount.getPecMode().equals(PecMode.IDLE)) {
             auxAdapter.queueCommand(new PecStopRecording(mount));
         }
+    }
 
+    /**
+     * Set the polling interval for GPS query messages
+     * @param gpsPollInterval
+     */
+    public void setGpsPollInterval(int gpsPollInterval) {
+        this.gpsPollInterval = gpsPollInterval;
     }
 }
