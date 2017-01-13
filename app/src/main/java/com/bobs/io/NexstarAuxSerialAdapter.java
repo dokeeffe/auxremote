@@ -6,6 +6,7 @@ import jssc.SerialPortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import javax.xml.bind.DatatypeConverter;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit;
  * Low level IO adapter class responsible for serial communication with the mount by means of {@link MountCommand} objects.
  * Since serial communication is a non blocking IO, Java {@link BlockingQueue}s are used as message channels to ensure the ordering of the messages being sent to the mount and response messages being read from the mount.
  */
+@Component
 public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
 
     /**
@@ -29,7 +31,7 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
     private SerialPortBuilder serialPortBuilder;
 
     /**
-     * The SerialPort used to send and recieve bytes to/from.
+     * The SerialPort used to send and receive bytes to/from.
      */
     private SerialPort serialPort;
 
@@ -40,10 +42,6 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
     private BlockingQueue<byte[]> outputChannel = new LinkedBlockingQueue<>(10);
     private boolean connected;
     private String serialPortName;
-
-    public NexstarAuxSerialAdapter(SerialPort serialPort) {
-        this.serialPort = serialPort;
-    }
 
     /**
      * Queue a serial command. Serial commands are only issued in series (one after another)
@@ -107,7 +105,9 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
     @PreDestroy
     public void stop() throws SerialPortException {
         connected = false;
-        serialPort.closePort();
+        if(serialPort!=null) {
+            serialPort.closePort();
+        }
     }
 
     @Override

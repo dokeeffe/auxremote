@@ -31,7 +31,7 @@ public class NexstarAuxSerialAdapterTest {
         serialPort = mock(SerialPort.class);
         SerialPortBuilder serialPortBuilder = mock(SerialPortBuilder.class);
         when(serialPortBuilder.buildSerialPortForHandset("/dev/ttyUSB0")).thenReturn(serialPort);
-        sut = new NexstarAuxSerialAdapter(serialPort);
+        sut = new NexstarAuxSerialAdapter();
         sut.setSerialPortName("/dev/ttyUSB0");
         sut.setSerialPortBuilder(serialPortBuilder);
         outputChannel = (Queue) ReflectionTestUtils.getField(sut, "outputChannel");
@@ -60,6 +60,7 @@ public class NexstarAuxSerialAdapterTest {
     @Test
     public void stop() throws Exception {
         ReflectionTestUtils.setField(sut, "connected", Boolean.TRUE);
+        ReflectionTestUtils.setField(sut, "serialPort", serialPort);
         sut.stop();
         verify(serialPort).closePort();
         assertFalse(sut.isConnected());

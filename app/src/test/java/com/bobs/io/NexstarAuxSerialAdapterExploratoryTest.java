@@ -16,10 +16,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 /**
  * Created by dokeeffe on 24/12/16.
  */
-@Ignore
+@Ignore //This test was used as part of the experimental POC work when connected to a physical mount.
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {TestConfig.class})
-public class NexstarAuxSerialAdapterIntegrationTest {
+public class NexstarAuxSerialAdapterExploratoryTest {
 
     @Autowired
     private NexstarAuxSerialAdapter sut;
@@ -29,9 +29,6 @@ public class NexstarAuxSerialAdapterIntegrationTest {
 
     @Before
     public void setup() {
-//        SerialPort sp = mock(SerialPort.class);
-//        SerialPort sp = new SerialPort("/dev/ttyUSB0");
-//        sut = new NexstarAuxSerialAdapter(sp);
         mount.setTrackingMode(TrackingMode.EQ_NORTH);
         new Thread(sut).start();
 

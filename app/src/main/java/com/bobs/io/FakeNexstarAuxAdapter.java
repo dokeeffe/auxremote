@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * A sumilator adapter for testing clients such as INDI
  */
-@Component
+//@Component
 public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
 
     Logger LOGGER = LoggerFactory.getLogger(FakeNexstarAuxAdapter.class);

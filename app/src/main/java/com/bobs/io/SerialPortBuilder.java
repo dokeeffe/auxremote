@@ -7,13 +7,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
- * Created by dokeeffe on 1/10/17.
+ * Utility class to create an instance of a SerialPort. Manily to ease testing.
  */
 @Component
 public class SerialPortBuilder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SerialPortBuilder.class);
 
+    /**
+     * Create a SerialPort instance for use when communicating with a nexstar hansdet over serial.
+     * @param serialPortName
+     * @return
+     */
     public SerialPort buildSerialPortForHandset(String serialPortName) {
         SerialPort serialPort = new SerialPort(serialPortName);
         try {

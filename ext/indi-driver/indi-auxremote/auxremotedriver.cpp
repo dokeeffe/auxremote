@@ -75,7 +75,7 @@ const char * AuxRemote::getDefaultName() {
 
 bool AuxRemote::initProperties() {
   INDI::Telescope::initProperties();
-  IUFillText(&httpEndpointT[0], "API_ENDPOINT", "API Endpoint", "http://localhost:8080/api/mount");
+  IUFillText(&httpEndpointT[0], "API_ENDPOINT", "API Endpoint", "http://localhost:8080/api");
   IUFillTextVector(&httpEndpointTP, httpEndpointT, 1, getDeviceName(), "HTTP_API_ENDPOINT", "HTTP endpoint", OPTIONS_TAB, IP_RW, 5, IPS_IDLE);
   TrackState=SCOPE_IDLE;
   initGuiderProperties(getDeviceName(), MOTION_TAB);
@@ -171,9 +171,13 @@ bool AuxRemote::Connect() {
       DEBUG(INDI::Logger::DBG_ERROR, "HTTP API endpoint is not available. Set it in the options tab");
       return false;
   }
-  DEBUGF(INDI::Logger::DBG_DEBUG,  "Connecting to %s...", httpEndpointT[0].text);
+  DEBUGF(INDI::Logger::DBG_DEBUG,  "Updating SerialPort to %s...", PortT[0].text);
+  char _json[60];
+  snprintf(_json, 60, "{\"serialPort\":\"%s\"}", PortT[0].text);
+  SendPostRequest(_json,"/mount");
 
-  connected = SendPostRequest("","/connect");
+  DEBUGF(INDI::Logger::DBG_DEBUG,  "Connecting to %s...", httpEndpointT[0].text);
+  connected = SendPostRequest("/mount","/mount/connect");
   if (connected) {
     DEBUG(INDI::Logger::DBG_SESSION, "Succesfully connected");
     ReadScopeStatus();
@@ -272,7 +276,7 @@ bool AuxRemote::ReadScopeStatus() {
 }
 
 bool AuxRemote::SendPostRequest(const char *json_payload, const char *path) {
-  DEBUGF(INDI::Logger::DBG_DEBUG, "sending request %s", json_payload);
+  DEBUGF(INDI::Logger::DBG_DEBUG, "sending request %s to %s", json_payload, path);
   bool status = false;
   CURL *curl;
   CURLcode res;
@@ -312,14 +316,14 @@ bool AuxRemote::Goto(double ra, double dec) {
   char _json[60];
   snprintf(_json, 60, "{\"raHours\":%f ,\"dec\":%f , \"type\":\"%s\"}", ra, dec, "slew");
   TrackState = SCOPE_SLEWING;
-  return SendPostRequest(_json,"/target");
+  return SendPostRequest(_json,"/mount/target");
 }
 
 bool AuxRemote::Sync(double ra, double dec) {
   char _json[60];
   snprintf(_json, 60, "{\"raHours\":%f ,\"dec\":%f , \"type\":\"%s\"}", ra, dec, "sync");
   EqNP.s    = IPS_OK;
-  return SendPostRequest(_json,"/target");
+  return SendPostRequest(_json,"/mount/target");
 }
 
 /**
@@ -360,7 +364,7 @@ bool AuxRemote::Park() {
   TrackState = SCOPE_PARKING; //TODO: Needed? Maybe the ReadScopeStatus should set this..
   char _json[60];
   snprintf(_json, 60, "{\"raHours\":%f ,\"dec\":%f , \"type\":\"%s\"}", equatorialPos.ra/15.0, equatorialPos.dec, "park");
-  bool status = SendPostRequest(_json,"/target");
+  bool status = SendPostRequest(_json,"/mount/target");
   if (!status) {
     DEBUG(INDI::Logger::DBG_ERROR, "Failed to park");
   }
@@ -438,7 +442,7 @@ bool AuxRemote::UnPark() {
   DEBUGF(INDI::Logger::DBG_SESSION, "Unparking and syncing to parked coordinates RA (%s) DEC (%s)...", RAStr, DEStr);
   char _json[60];
   snprintf(_json, 60, "{\"raHours\":%f ,\"dec\":%f , \"type\":\"%s\"}", equatorialPos.ra/15.0, equatorialPos.dec, "unpark");
-  bool status = SendPostRequest(_json,"/target");
+  bool status = SendPostRequest(_json,"/mount/target");
   if (!status) {
     DEBUG(INDI::Logger::DBG_ERROR, "Failed to unpark");
   } else {
@@ -454,7 +458,7 @@ bool AuxRemote::MoveNS(INDI_DIR_NS dir, TelescopeMotionCommand command) {
   char _rate[] = { (char)('0' + IUFindOnSwitchIndex(&SlewRateSP)), 0 };
   char _json[50];
   snprintf(_json, 50, "{\"type\":\"move\",\"motion\":\"%s\",\"motionRate\":\"%s\"}", _move, _rate);
-  bool result =  SendPostRequest(_json, "/target");
+  bool result =  SendPostRequest(_json, "/mount/target");
   return result;
 }
 
@@ -464,11 +468,11 @@ bool AuxRemote::MoveWE(INDI_DIR_WE dir, TelescopeMotionCommand command) {
   char _rate[] = { (char)('0' + IUFindOnSwitchIndex(&SlewRateSP)), 0 };
   char _json[50];
   snprintf(_json, 50, "{\"type\":\"move\",\"motion\":\"%s\",\"motionRate\":\"%s\"}", _move, _rate);
-  return SendPostRequest(_json, "/target");
+  return SendPostRequest(_json, "/mount/target");
 }
 
 bool AuxRemote::Abort() {
-  bool status =  SendPostRequest("{\"type\":\"move\",\"motion\":\"abort\",\"motionRate\":\"0\"}", "/target");
+  bool status =  SendPostRequest("{\"type\":\"move\",\"motion\":\"abort\",\"motionRate\":\"0\"}", "/mount/target");
   if (status) {
     DEBUG(INDI::Logger::DBG_SESSION, "Succesfully aborted");
   } else {
@@ -482,7 +486,7 @@ IPState AuxRemote::GuideNorth(float ms) {
   char _json[100];
   int _rate = 50;
   snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"north\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%.0f\"}", _rate, ms);
-  bool status = SendPostRequest(_json, "/target");
+  bool status = SendPostRequest(_json, "/mount/target");
   if (status) {
     return IPS_BUSY; //FIXME: should be IPS_OK??:
   } else {
@@ -495,7 +499,7 @@ IPState AuxRemote::GuideSouth(float ms) {
   char _json[100];
   int _rate = 50;
   snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"south\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%.0f\"}", _rate, ms);
-  bool status = SendPostRequest(_json, "/target");
+  bool status = SendPostRequest(_json, "/mount/target");
   if (status) {
     return IPS_BUSY; //FIXME: should be IPS_OK??:
   } else {
@@ -508,7 +512,7 @@ IPState AuxRemote::GuideEast(float ms) {
   char _json[100];
   int _rate = 50;
   snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"east\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%.0f\"}", _rate, ms);
-  bool status = SendPostRequest(_json, "/target");
+  bool status = SendPostRequest(_json, "/mount/target");
   if (status) {
     return IPS_BUSY; //FIXME: should be IPS_OK??:
   } else {
@@ -521,7 +525,7 @@ IPState AuxRemote::GuideWest(float ms) {
   char _json[100];
   int _rate = 50;
   snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"west\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%.0f\"}", _rate, ms);
-  bool status = SendPostRequest(_json, "/target");
+  bool status = SendPostRequest(_json, "/mount/target");
   if (status) {
     return IPS_BUSY; //FIXME: should be IPS_OK??:
   } else {
