@@ -205,11 +205,11 @@ public class MountService {
         auxAdapter.queueCommand(new EnableCordWrap(mount));
         auxAdapter.queueCommand(new QueryCordWrap(mount));
         //FIXME: remove next 3 lines, just for POC testing. Need to query the GPS module instead.
-        mount.setGpsLat(52.25288940983352);
-        mount.setGpsLon(351.639317967851);
-        mount.setLocationSet(true);
+//        mount.setGpsLat(52.25288940983352);
+//        mount.setGpsLon(351.639317967851);
+//        mount.setLocationSet(true);
         if (!mount.isLocationSet() || mount.getGpsLat()==null || mount.getGpsLon()==null) {
-            //waitForGps();
+            waitForGps();
         }
         return true;
     }
