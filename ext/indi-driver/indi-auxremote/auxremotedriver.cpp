@@ -192,14 +192,16 @@ bool AuxRemote::Disconnect() {
 
 bool AuxRemote::ReadScopeStatus() {
   bool result = false;
-  //DEBUGF(INDI::Logger::DBG_DEBUG, "Reading status from %s",httpEndpointT[0].text);
+  DEBUGF(INDI::Logger::DBG_DEBUG, "Reading status from %s",httpEndpointT[0].text);
   CURL *curl;
   CURLcode res;
   std::string readBuffer;
 
   curl = curl_easy_init();
   if(curl) {
-      curl_easy_setopt(curl, CURLOPT_URL, httpEndpointT[0].text);
+      char endpoint[50];
+      strcpy(endpoint,httpEndpointT[0].text);
+      curl_easy_setopt(curl, CURLOPT_URL, strcat(endpoint, "/mount"));
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L); //10 sec timeout
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
@@ -224,7 +226,7 @@ bool AuxRemote::ReadScopeStatus() {
             DEBUG(INDI::Logger::DBG_ERROR, "NON OK response from service");
             result = false;
         }
-        // DEBUGF(INDI::Logger::DBG_DEBUG, "http response %s", readBuffer.c_str());
+        DEBUGF(INDI::Logger::DBG_DEBUG, "http response %s", readBuffer.c_str());
         JsonIterator it;
         double ra;
         double dec;
@@ -257,11 +259,15 @@ bool AuxRemote::ReadScopeStatus() {
                 EqNP.s = IPS_BUSY;
               }
               if(strcmp(ts,"PARKED")==0) {
+                DEBUG(INDI::Logger::DBG_SESSION, "Entering parked logic");
+                sleep(5);
                 if(TrackState == SCOPE_PARKING || TrackState == SCOPE_SLEWING) {
                   SetParked(true);
                   DEBUG(INDI::Logger::DBG_SESSION, "Park succesfull");
+                  sleep(5);
                   TrackState = SCOPE_PARKED;
                   EqNP.s = IPS_OK;
+                  DEBUG(INDI::Logger::DBG_SESSION, "Leavingg parked logic");
                 }
               }
             }
@@ -367,8 +373,10 @@ bool AuxRemote::Park() {
   bool status = SendPostRequest(_json,"/mount/target");
   if (!status) {
     DEBUG(INDI::Logger::DBG_ERROR, "Failed to park");
+    return false;
   }
-  return status;
+  DEBUG(INDI::Logger::DBG_ERROR, "Parking");
+  return true;
 }
 
 void AuxRemote::SetCurrentPark() {

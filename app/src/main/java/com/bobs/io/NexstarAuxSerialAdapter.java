@@ -60,6 +60,9 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
      */
     @Override
     public void start() {
+        if(this.serialPortName==null) {
+            throw new IllegalStateException("Cannot connect when serial port not set");
+        }
         LOGGER.debug("Starting adapter");
         this.serialPort = serialPortBuilder.buildSerialPortForHandset(serialPortName);
         try {

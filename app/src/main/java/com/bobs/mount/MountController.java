@@ -23,7 +23,7 @@ public class MountController {
 
     /**
      * GET the {@link Mount}s current state.
-     *
+     * FIXME: on not connected return somethnig other than 500
      * @return
      */
     @GetMapping("")

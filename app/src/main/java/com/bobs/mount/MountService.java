@@ -205,11 +205,11 @@ public class MountService {
         auxAdapter.queueCommand(new EnableCordWrap(mount));
         auxAdapter.queueCommand(new QueryCordWrap(mount));
         //FIXME: remove next 3 lines, just for POC testing. Need to query the GPS module instead.
-//        mount.setGpsLat(52.25288940983352);
-//        mount.setGpsLon(351.639317967851);
-//        mount.setLocationSet(true);
-        if (!mount.isLocationSet()) {
-            waitForGps();
+        mount.setGpsLat(52.25288940983352);
+        mount.setGpsLon(351.639317967851);
+        mount.setLocationSet(true);
+        if (!mount.isLocationSet() || mount.getGpsLat()==null || mount.getGpsLon()==null) {
+            //waitForGps();
         }
         return true;
     }
@@ -236,10 +236,12 @@ public class MountService {
      */
     private void waitForGps() {
         int attempts = 0;
+        mount.setLocationSet(false);
         boolean maxAttemptsReached = false;
-        while (!mount.isGpsConnected() && !maxAttemptsReached) {
+        while (!mount.isLocationSet() && !maxAttemptsReached) {
             LOGGER.info("GPS locating satellites");
             auxAdapter.queueCommand(new GpsLinked(mount));
+            sleep(1000);
             if (!mount.isGpsConnected()) {
                 sleep(gpsPollInterval);
             } else {
@@ -248,7 +250,8 @@ public class MountService {
                 auxAdapter.queueCommand(new GpsLon(mount));
                 mount.setLocationSet(true);
             }
-            if (attempts++ > 3) {
+            if (attempts++ > 10) {
+                //FIXME: This is serious and can cause damage. Need to stop all operations if lat & lon are null
                 LOGGER.warn("Not waiting any longer for a GPS link. Set LAT and LON manually through the API");
                 maxAttemptsReached = true;
             }
@@ -369,6 +372,9 @@ public class MountService {
         return mount;
     }
 
+    /**
+     * FIXME: pec start rec seems to get triggered on connect from indi driver
+     */
     @Async
     public void startPecOperation() {
         LOGGER.info("Setting PEC mode to {]", mount.getPecMode());

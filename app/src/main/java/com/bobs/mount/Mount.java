@@ -54,8 +54,7 @@ public class Mount implements Serializable {
     public void loadState() {
         try {
             File persistanceStore = new File(System.getProperty("user.home"), "auxremote-mount.ser");
-            byte[] mountState = FileCopyUtils.copyToByteArray(persistanceStore);
-            Mount persisted = (Mount) SerializationUtils.deserialize(mountState);
+            byte[] mountState = FileCopyUtils.copyToByteArray(persistanceStore);            Mount persisted = (Mount) SerializationUtils.deserialize(mountState);
             BeanUtils.copyProperties(persisted, this);
             this.pecIndexFound = false;
             this.pecMode = PecMode.IDLE;

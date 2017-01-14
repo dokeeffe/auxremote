@@ -44,6 +44,7 @@ public class QueryAzMcPosition extends MountCommand {
         double azimuthDegreesReportedByMount = bytesToDegrees(hex);
         LOGGER.debug("ALTAZ raw data = {}", azimuthDegreesReportedByMount);
         if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
+            //FIXME: NPE when gps lat lon are null
             Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getGpsLon(), azimuthDegreesReportedByMount, mount.getDecDegrees());
             LOGGER.debug("RA {}", position.getRaHours());
             mount.setRaHours(position.getRaHours());
