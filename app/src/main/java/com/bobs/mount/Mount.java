@@ -30,7 +30,7 @@ public class Mount implements Serializable {
     private TrackingState trackingState = TrackingState.IDLE;
     private Double raHours = 0.0;
     private Double decDegrees = 0.0;
-    private TrackingMode trackingMode; //eq north will be the only tested one.
+    private TrackingMode trackingMode = TrackingMode.EQ_NORTH; //eq north, default and will be the only tested one initially.
     private Double gpsLat;
     private Double gpsLon;
     private boolean gpsConnected;
@@ -197,12 +197,12 @@ public class Mount implements Serializable {
         this.aligned = aligned;
     }
 
-    public void setCordWrapEnabled(boolean cordWrapEnabled) {
-        this.cordWrapEnabled = cordWrapEnabled;
-    }
-
     public boolean isCordWrapEnabled() {
         return cordWrapEnabled;
+    }
+
+    public void setCordWrapEnabled(boolean cordWrapEnabled) {
+        this.cordWrapEnabled = cordWrapEnabled;
     }
 
     public String getSerialPort() {
@@ -245,11 +245,11 @@ public class Mount implements Serializable {
         this.guideRate = guideRate;
     }
 
-    public void setCordWrapPosition(double cordWrapPosition) {
-        this.cordWrapPosition = cordWrapPosition;
-    }
-
     public double getCordWrapPosition() {
         return cordWrapPosition;
+    }
+
+    public void setCordWrapPosition(double cordWrapPosition) {
+        this.cordWrapPosition = cordWrapPosition;
     }
 }

@@ -160,6 +160,7 @@ public class MountServiceTest {
 
     @Test
     public void startTracking() throws Exception {
+        mount.setGuideRate(GuideRate.SIDEREAL);
         mountService.startTracking();
 
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
@@ -167,6 +168,24 @@ public class MountServiceTest {
         assertEquals(SetGuideRate.class, queuedCommands.get(1).getClass());
         assertEquals(SetGuideRate.class, queuedCommands.get(2).getClass());
         assertEquals(3, queuedCommands.size());
+        GuideRate rate = (GuideRate) ReflectionTestUtils.getField(queuedCommands.get(2), "guideRate");
+        assertEquals(GuideRate.SIDEREAL, rate);
+        assertEquals(TrackingState.TRACKING, mount.getTrackingState());
+    }
+
+    @Test
+    public void startTracking_off() throws Exception {
+        mount.setGuideRate(GuideRate.OFF);
+        mountService.startTracking();
+
+        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+        assertEquals(SetGuideRate.class, queuedCommands.get(0).getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.get(1).getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.get(2).getClass());
+        assertEquals(3, queuedCommands.size());
+        GuideRate rate = (GuideRate) ReflectionTestUtils.getField(queuedCommands.get(2), "guideRate");
+        assertEquals(GuideRate.OFF, rate);
+        assertEquals(TrackingState.IDLE, mount.getTrackingState());
     }
 
     @Test
@@ -542,7 +561,7 @@ public class MountServiceTest {
         mountService.startPecOperation();
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
         assertEquals(1, queuedCommands.size());
-        assertEquals(PecStartPlayback.class, queuedCommands.get(0).getClass());
+        assertEquals(PecPlayback.class, queuedCommands.get(0).getClass());
 
     }
 
@@ -551,8 +570,9 @@ public class MountServiceTest {
         mount.setPecMode(PecMode.IDLE);
         mountService.startPecOperation();
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(1, queuedCommands.size());
+        assertEquals(2, queuedCommands.size());
         assertEquals(PecStopRecording.class, queuedCommands.get(0).getClass());
+        assertEquals(PecPlayback.class, queuedCommands.get(1).getClass());
 
     }
 

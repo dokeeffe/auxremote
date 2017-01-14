@@ -1,15 +1,19 @@
 package com.bobs.io;
 
 import com.bobs.serialcommands.MountCommand;
+import com.bobs.serialcommands.PecPlayback;
+import com.bobs.serialcommands.PecQueryAtIndex;
+import com.bobs.serialcommands.PecQueryRecordDone;
 import jssc.SerialPortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+import static com.bobs.serialcommands.MountCommand.*;
 
 /**
  * A sumilator adapter for testing clients such as INDI
@@ -23,10 +27,11 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
     /**
      * Channels are defined to sequence messages and order the responses.
      */
-    private BlockingQueue<MountCommand> inputChannel = new LinkedBlockingQueue<>(10);
+    private BlockingQueue<MountCommand> inputChannel = new LinkedBlockingQueue<>(1000);
 
     private boolean connected;
     private String serialPortName;
+    private int defaultFakeOperationTimerCounter;
 
     /**
      * Queue a serial command. Serial commands are only issued in series (one after another)
@@ -54,8 +59,26 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
             } catch (InterruptedException e) {
                 LOGGER.error("error reading command", e);
             }
-            byte[] cmd = command.getCommand();
             LOGGER.info("Fake adapter processing {}", command.getClass());
+            if (command instanceof PecQueryAtIndex) {
+                fakeLongRunningOperation(command, 2);
+            }
+            if (command instanceof PecPlayback) {
+                command.handleMessage(new byte[]{ACK});
+            }
+            if (command instanceof PecQueryRecordDone) {
+                fakeLongRunningOperation(command, 10);
+            }
+        }
+    }
+
+    private void fakeLongRunningOperation(MountCommand command, int callsTillDone) {
+        if (defaultFakeOperationTimerCounter > callsTillDone) {
+            command.handleMessage(new byte[]{OPERATION_COMPLETE});
+            defaultFakeOperationTimerCounter = 0;
+        } else {
+            defaultFakeOperationTimerCounter++;
+            command.handleMessage(new byte[]{OPERATION_PENDING});
         }
     }
 

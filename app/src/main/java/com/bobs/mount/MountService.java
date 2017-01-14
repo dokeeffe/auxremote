@@ -176,7 +176,11 @@ public class MountService {
             auxAdapter.queueCommand(new SetGuideRate(mount, MountCommand.AZM_BOARD, GuideRate.OFF));
             auxAdapter.queueCommand(new SetGuideRate(mount, MountCommand.ALT_BOARD, GuideRate.OFF));
             auxAdapter.queueCommand(new SetGuideRate(mount, MountCommand.AZM_BOARD, mount.getGuideRate()));
-            mount.setTrackingState(TrackingState.TRACKING);
+            if (mount.getGuideRate() == GuideRate.OFF) {
+                mount.setTrackingState(TrackingState.IDLE);
+            } else {
+                mount.setTrackingState(TrackingState.TRACKING);
+            }
         } else {
             //TODO: Implement tracking for ALT-AZ mode and eq south
             throw new UnsupportedOperationException("Currently only EQ north mode is supported.");
@@ -348,7 +352,7 @@ public class MountService {
         if (newMount.getSerialPort() != null) {
             mount.setSerialPort(newMount.getSerialPort());
         }
-        if (newMount.getGuideRate() != null) {
+        if (newMount.getGuideRate() != null && newMount.getGuideRate() != mount.getGuideRate()) {
             mount.setGuideRate(newMount.getGuideRate());
             startTracking();
         }
@@ -373,16 +377,19 @@ public class MountService {
             auxAdapter.queueCommand(new PecSeekIndex(mount));
             while (!mount.isPecIndexFound()) {
                 auxAdapter.queueCommand(new PecQueryAtIndex(mount));
+                sleep(5000);
             }
         } else if (mount.getPecMode().equals(PecMode.RECORDING)) {
             auxAdapter.queueCommand(new PecStartRecording(mount));
             while (mount.getPecMode().equals(PecMode.RECORDING)) {
                 auxAdapter.queueCommand(new PecQueryRecordDone(mount));
+                sleep(5000);
             }
         } else if (mount.getPecMode().equals(PecMode.PLAYING)) {
-            auxAdapter.queueCommand(new PecStartPlayback(mount));
+            auxAdapter.queueCommand(new PecPlayback(mount, true));
         } else if (mount.getPecMode().equals(PecMode.IDLE)) {
             auxAdapter.queueCommand(new PecStopRecording(mount));
+            auxAdapter.queueCommand(new PecPlayback(mount, false));
         }
     }
 

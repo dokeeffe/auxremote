@@ -10,10 +10,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Configuration
 @EnableAsync
 @EnableScheduling
-public class NexmodApplication {
+public class AuxRemoteApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(NexmodApplication.class, args);
+        SpringApplication.run(AuxRemoteApplication.class, args);
     }
 
 }

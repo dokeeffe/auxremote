@@ -8,14 +8,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by dokeeffe on 25/12/16.
  */
-public class PecStartPlayback extends MountCommand {
+public class PecPlayback extends MountCommand {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PecStartPlayback.class);
-    public static final byte MESSAGE_LENGTH = 0x01;
+    public static final byte MESSAGE_LENGTH = 0x02;
     public static final byte RESPONSE_LENGTH = 0x01;
+    private static final Logger LOGGER = LoggerFactory.getLogger(PecPlayback.class);
+    private final boolean start;
 
-    public PecStartPlayback(Mount mount) {
+    public PecPlayback(Mount mount, boolean start) {
         super(mount);
+        this.start = start;
     }
 
     @Override
@@ -25,7 +27,11 @@ public class PecStartPlayback extends MountCommand {
         result[1] = MESSAGE_LENGTH;
         result[2] = AZM_BOARD;
         result[3] = MC_PEC_PLAYBACK;
-        result[4] = 0x00;
+        if (start) {
+            result[4] = 0x01;
+        } else {
+            result[4] = 0x00;
+        }
         result[5] = 0x00;
         result[6] = 0x00;
         result[7] = RESPONSE_LENGTH;
@@ -35,7 +41,11 @@ public class PecStartPlayback extends MountCommand {
     @Override
     public void handleMessage(byte[] message) {
         if (ACK == message[0]) {
-            mount.setPecMode(PecMode.PLAYING);
+            if (start) {
+                mount.setPecMode(PecMode.PLAYING);
+            } else {
+                mount.setPecMode(PecMode.IDLE);
+            }
         } else {
             LOGGER.error("Unexpected message for MC_PEC_PLAYBACK command {}", message[0]);
         }
