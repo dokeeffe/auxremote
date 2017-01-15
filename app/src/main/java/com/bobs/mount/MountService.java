@@ -211,7 +211,7 @@ public class MountService {
             auxAdapter.setSerialPortName(mount.getSerialPort());
             LOGGER.info("Starting serial adapter thread");
             new Thread(auxAdapter).start();
-            sleep(1000);
+            sleep(1000);//wait for connect
         }
         LOGGER.debug("Enabling Cordwrap");
         auxAdapter.queueCommand(new QueryCordWrapPos(mount));
