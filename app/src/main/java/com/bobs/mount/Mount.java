@@ -27,7 +27,7 @@ public class Mount implements Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(Mount.class);
 
     private String version;
-    private TrackingState trackingState = TrackingState.IDLE;
+    private TrackingState trackingState;
     private Double raHours = 0.0;
     private Double decDegrees = 0.0;
     private TrackingMode trackingMode = TrackingMode.EQ_NORTH; //eq north, default and will be the only tested one initially.
@@ -43,10 +43,10 @@ public class Mount implements Serializable {
     private boolean aligned = false;
     private boolean cordWrapEnabled;
     private String serialPort;
-    private PecMode pecMode = PecMode.IDLE;
+    private PecMode pecMode;
     private boolean pecIndexFound = false;
     private String error;
-    private GuideRate guideRate = GuideRate.SIDEREAL;
+    private GuideRate guideRate;
     private double cordWrapPosition;
 
 

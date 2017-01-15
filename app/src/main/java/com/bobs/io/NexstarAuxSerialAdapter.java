@@ -51,7 +51,11 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
      */
     @Override
     public void queueCommand(MountCommand command) {
-        this.inputChannel.add(command);
+        if (serialPort.isOpened()) {
+            this.inputChannel.add(command);
+        } else {
+            throw new IllegalStateException("Cannot send messages when not connected");
+        }
     }
 
 

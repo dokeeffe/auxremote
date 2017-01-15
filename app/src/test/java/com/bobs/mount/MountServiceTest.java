@@ -34,6 +34,8 @@ public class MountServiceTest {
         mount.setGpsLat(52.2);
         mount.setGpsLon(351.6);
         mount.setLocationSet(true);
+        mountService.setGpsPollInterval(10); //to speedup test
+        mountService.setPecPollInterval(10); //to speedup test
     }
 
     @Test
@@ -212,10 +214,10 @@ public class MountServiceTest {
     @Test
     public void connect_when_noLocationSet_then_gpsIsQueried() throws Exception {
         mount.setLocationSet(false);
-        mountService.setGpsPollInterval(10); //Just to speedup test
         mountService.connect();
 
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+        assertEquals(6, queuedCommands.size());
         assertEquals(QueryCordWrapPos.class, queuedCommands.get(0).getClass());
         assertEquals(EnableCordWrap.class, queuedCommands.get(1).getClass());
         assertEquals(QueryCordWrap.class, queuedCommands.get(2).getClass());
@@ -223,7 +225,6 @@ public class MountServiceTest {
         assertEquals(GpsLat.class, queuedCommands.get(4).getClass());
         assertEquals(GpsLon.class, queuedCommands.get(5).getClass());
         System.out.println(queuedCommands);
-        assertEquals(6, queuedCommands.size());
     }
 
     @Test

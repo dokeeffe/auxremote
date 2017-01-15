@@ -31,12 +31,15 @@ public class NexstarAuxSerialAdapterTest {
         serialPort = mock(SerialPort.class);
         SerialPortBuilder serialPortBuilder = mock(SerialPortBuilder.class);
         when(serialPortBuilder.buildSerialPortForHandset("/dev/ttyUSB0")).thenReturn(serialPort);
+        when(serialPort.isOpened()).thenReturn(Boolean.TRUE);
         sut = new NexstarAuxSerialAdapter();
         sut.setSerialPortName("/dev/ttyUSB0");
         sut.setSerialPortBuilder(serialPortBuilder);
         outputChannel = (Queue) ReflectionTestUtils.getField(sut, "outputChannel");
         inputChannel = (Queue) ReflectionTestUtils.getField(sut, "inputChannel");
         auxSerialPortEventListener = new AuxSerialPortEventListener(serialPort, outputChannel);
+        new Thread(sut).start();
+        Thread.sleep(100);
     }
 
     @Test
@@ -45,9 +48,14 @@ public class NexstarAuxSerialAdapterTest {
         assertEquals(1, inputChannel.size());
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void queueCommand_when_notconnected_throwsException() throws Exception {
+        when(serialPort.isOpened()).thenReturn(Boolean.FALSE);
+        sut.queueCommand(testCommand);
+    }
+
     @Test
     public void start_verifyQueuedCommandGetsUsed() throws Exception {
-        new Thread(sut).start();
         sut.queueCommand(testCommand);
         outputChannel.add(new byte[]{0x21, 0x22});
         sut.waitForQueueEmpty();

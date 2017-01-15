@@ -25,6 +25,7 @@ public class MountService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MountService.class);
     private static final int DEFAULT_GPS_POLL_INTERVAL = 10000;
+    private static final int DEFAULT_PEC_POLL_INTERVAL = 5000;
 
     /**
      * This is the mount that the service is managing. There is only 1 mount instance.
@@ -36,6 +37,7 @@ public class MountService {
     private NexstarAuxAdapter auxAdapter;
 
     private int gpsPollInterval = DEFAULT_GPS_POLL_INTERVAL;
+    private int pecPollInterval = DEFAULT_PEC_POLL_INTERVAL;
 
     /**
      * The Sync operation is basically 'alignment'. It tells the mount where it is currently pointing.
@@ -352,20 +354,20 @@ public class MountService {
      * @return
      */
     public Mount updateMount(Mount newMount) {
-        if (newMount.getSerialPort() != null) {
+        if (newMount.getSerialPort() != null && newMount.getSerialPort() != mount.getSerialPort()) {
             mount.setSerialPort(newMount.getSerialPort());
         }
         if (newMount.getGuideRate() != null && newMount.getGuideRate() != mount.getGuideRate()) {
             mount.setGuideRate(newMount.getGuideRate());
             startTracking();
         }
-        if (newMount.getSlewLimitAlt() != null) {
+        if (newMount.getSlewLimitAlt() != null && newMount.getSlewLimitAlt() != mount.getSlewLimitAlt()) {
             mount.setSlewLimitAlt(newMount.getSlewLimitAlt());
         }
-        if (newMount.getSlewLimitAz() != null) {
+        if (newMount.getSlewLimitAz() != null && newMount.getSlewLimitAz() != mount.getSlewLimitAz()) {
             mount.setSlewLimitAz(newMount.getSlewLimitAz());
         }
-        if (newMount.getPecMode() != null) {
+        if (newMount.getPecMode() != null && newMount.getPecMode() != mount.getPecMode()) {
             mount.setPecMode(newMount.getPecMode());
             startPecOperation();
         }
@@ -383,13 +385,13 @@ public class MountService {
             auxAdapter.queueCommand(new PecSeekIndex(mount));
             while (!mount.isPecIndexFound()) {
                 auxAdapter.queueCommand(new PecQueryAtIndex(mount));
-                sleep(5000);
+                sleep(pecPollInterval);
             }
         } else if (mount.getPecMode().equals(PecMode.RECORDING)) {
             auxAdapter.queueCommand(new PecStartRecording(mount));
             while (mount.getPecMode().equals(PecMode.RECORDING)) {
                 auxAdapter.queueCommand(new PecQueryRecordDone(mount));
-                sleep(5000);
+                sleep(pecPollInterval);
             }
         } else if (mount.getPecMode().equals(PecMode.PLAYING)) {
             auxAdapter.queueCommand(new PecPlayback(mount, true));
@@ -405,5 +407,9 @@ public class MountService {
      */
     public void setGpsPollInterval(int gpsPollInterval) {
         this.gpsPollInterval = gpsPollInterval;
+    }
+
+    public void setPecPollInterval(int pecPollInterval) {
+        this.pecPollInterval = pecPollInterval;
     }
 }
