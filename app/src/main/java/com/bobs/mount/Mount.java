@@ -2,7 +2,6 @@ package com.bobs.mount;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.SerializationUtils;
@@ -24,13 +23,13 @@ import java.io.Serializable;
 @Component
 public class Mount implements Serializable {
 
+    public static final String AUXREMOTE_MOUNT_SER = "auxremote-mount.ser";
     private static final Logger LOGGER = LoggerFactory.getLogger(Mount.class);
-
     private String version;
     private TrackingState trackingState;
     private Double raHours = 0.0;
-    private Double decDegrees = 0.0;
-    private TrackingMode trackingMode = TrackingMode.EQ_NORTH; //eq north, default and will be the only tested one initially.
+    private Double decDegrees = 90.0;
+    private TrackingMode trackingMode;
     private Double gpsLat;
     private Double gpsLon;
     private boolean gpsConnected;
@@ -50,19 +49,48 @@ public class Mount implements Serializable {
     private double cordWrapPosition;
 
 
+    /**
+     * On app startup, set defaults, and if possible load a previously persisted state.
+     */
     @PostConstruct
     public void loadState() {
+        setDefaults();
+        loadPersistedState(new File(System.getProperty("user.home"), AUXREMOTE_MOUNT_SER));
+    }
+
+    /**
+     * Load previously persisted mount state. Only a subset of properties are loaded
+     *
+     * @param serFile
+     */
+    protected void loadPersistedState(File serFile) {
         try {
-            File persistanceStore = new File(System.getProperty("user.home"), "auxremote-mount.ser");
-            byte[] mountState = FileCopyUtils.copyToByteArray(persistanceStore);            Mount persisted = (Mount) SerializationUtils.deserialize(mountState);
-            BeanUtils.copyProperties(persisted, this);
-            this.pecIndexFound = false;
-            this.pecMode = PecMode.IDLE;
-            this.gpsConnected = false;
-            this.aligned = false;
+            File persistanceStore = serFile;
+            byte[] mountState = FileCopyUtils.copyToByteArray(persistanceStore);
+            Mount persisted = (Mount) SerializationUtils.deserialize(mountState);
+            this.gpsLat = persisted.getGpsLat();
+            this.gpsLon = persisted.getGpsLon();
+            this.locationSet = persisted.isLocationSet();
+            this.serialPort = persisted.getSerialPort();
+            this.trackingState = persisted.getTrackingState();
+            if (persisted.getTrackingState() == TrackingState.TRACKING) {
+                LOGGER.info("restoring persisted RA DEC posistion from mount. This may not be the actual mount position");
+                this.raHours = persisted.getRaHours();
+                this.decDegrees = persisted.getDecDegrees();
+                this.aligned = persisted.isAligned();
+            }
         } catch (Exception e) {
-            LOGGER.error("Error restoring mount state from persistance store. Not a big problem. Using defaults.", e);
+            LOGGER.warn("Error restoring mount state from serialised. Not a big problem. Using defaults.", e);
         }
+    }
+
+    /**
+     * Set some defaults
+     */
+    private void setDefaults() {
+        this.trackingState = TrackingState.IDLE;
+        this.trackingMode = TrackingMode.EQ_NORTH; //currently the only one supported. Once others are developed then this will be loaded from persisted
+        this.setPecMode(PecMode.IDLE);
     }
 
     @PreDestroy

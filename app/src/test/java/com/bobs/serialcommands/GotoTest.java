@@ -17,6 +17,7 @@ public class GotoTest extends BaseCommandTest {
     @Before
     public void setUp() throws Exception {
         super.setup();
+        mount.setTrackingState(TrackingState.IDLE);
     }
 
     @Test

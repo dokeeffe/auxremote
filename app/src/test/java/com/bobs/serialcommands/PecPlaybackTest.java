@@ -19,6 +19,7 @@ public class PecPlaybackTest extends BaseCommandTest {
     public void setup() {
         super.setup();
         sut = new PecPlayback(mount, true);
+        mount.setPecMode(PecMode.IDLE);
     }
 
     @Test
