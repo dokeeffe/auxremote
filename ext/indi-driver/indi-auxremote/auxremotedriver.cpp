@@ -86,6 +86,7 @@ bool AuxRemote::initProperties() {
 }
 
 bool AuxRemote::saveConfigItems(FILE *fp) {
+  DEBUG(INDI::Logger::DBG_ERROR, "**save conf");
   INDI::Telescope::saveConfigItems(fp);
   IUSaveConfigText(fp, &httpEndpointTP);
   return true;
@@ -97,6 +98,7 @@ void AuxRemote::ISGetProperties(const char *dev) {
 }
 
 bool AuxRemote::updateProperties() {
+  DEBUG(INDI::Logger::DBG_ERROR, "**update props");
   INDI::Telescope::updateProperties();
 
   if (isConnected())
@@ -105,8 +107,8 @@ bool AuxRemote::updateProperties() {
     defineNumber(&GuideWENP);
 
 
-    if (InitPark())
-    {
+    if (InitPark()) {
+        DEBUG(INDI::Logger::DBG_ERROR, "**initpark");
         // If loading parking data is successful, we just set the default parking values.
         double HA = ln_get_apparent_sidereal_time(ln_get_julian_from_sys());
         double DEC = 90;
@@ -138,8 +140,8 @@ bool AuxRemote::updateProperties() {
   return true;
 }
 
-bool AuxRemote::ISNewNumber (const char *dev, const char *name, double values[], char *names[], int n)
-{
+bool AuxRemote::ISNewNumber (const char *dev, const char *name, double values[], char *names[], int n) {
+    DEBUG(INDI::Logger::DBG_ERROR, "**ISNewNumber");
     if(strcmp(dev,getDeviceName())==0)
     {
         if (!strcmp(name,GuideNSNP.name) || !strcmp(name,GuideWENP.name))
@@ -153,6 +155,7 @@ bool AuxRemote::ISNewNumber (const char *dev, const char *name, double values[],
 }
 
 bool AuxRemote::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n) {
+  DEBUG(INDI::Logger::DBG_ERROR, "**ISNewText");
   if(!strcmp(dev, getDeviceName())) {
     if (!strcmp(httpEndpointTP.name, name)) {
         IUUpdateText(&httpEndpointTP, texts, names, n);
@@ -187,6 +190,7 @@ bool AuxRemote::Connect() {
 }
 
 bool AuxRemote::Disconnect() {
+  DEBUG(INDI::Logger::DBG_ERROR, "Disconnecting");
   return true;
 }
 
@@ -250,17 +254,17 @@ bool AuxRemote::ReadScopeStatus() {
                 EqNP.s = IPS_OK;
               }
               if(strcmp(ts,"SLEWING")==0) {
+                DEBUG(INDI::Logger::DBG_SESSION, "status Slewing");
                 TrackState = SCOPE_SLEWING;
                 EqNP.s = IPS_BUSY;
               }
               if(strcmp(ts,"PARKING")==0) {
-                DEBUG(INDI::Logger::DBG_SESSION, "Parking");
+                DEBUG(INDI::Logger::DBG_SESSION, "status Parking");
                 TrackState = SCOPE_PARKING;
                 EqNP.s = IPS_BUSY;
               }
               if(strcmp(ts,"PARKED")==0) {
                 DEBUG(INDI::Logger::DBG_SESSION, "Entering parked logic");
-                sleep(5);
                 if(TrackState == SCOPE_PARKING || TrackState == SCOPE_SLEWING) {
                   SetParked(true);
                   DEBUG(INDI::Logger::DBG_SESSION, "Park succesfull");
@@ -272,12 +276,14 @@ bool AuxRemote::ReadScopeStatus() {
               }
             }
         }
+        DEBUG(INDI::Logger::DBG_SESSION, "Setting new RA DEC");
         NewRaDec(ra, dec);
         currentRA = ra;
         currentDEC = dec;
         result = true;
       }
     }
+    DEBUG(INDI::Logger::DBG_SESSION, "**Leaving ReadScopeStatus");
     return result;
 }
 
@@ -375,11 +381,12 @@ bool AuxRemote::Park() {
     DEBUG(INDI::Logger::DBG_ERROR, "Failed to park");
     return false;
   }
-  DEBUG(INDI::Logger::DBG_ERROR, "Parking");
+  DEBUG(INDI::Logger::DBG_ERROR, "Park request sent to mount");
   return true;
 }
 
 void AuxRemote::SetCurrentPark() {
+  DEBUG(INDI::Logger::DBG_ERROR, "Setting current park pos");
   ln_hrz_posn horizontalPos;
   // Libnova south = 0, west = 90, north = 180, east = 270
 
@@ -418,6 +425,7 @@ void AuxRemote::SetDefaultPark() {
 
 
 bool AuxRemote::UnPark() {
+  DEBUG(INDI::Logger::DBG_ERROR, "**unpark");
   double parkAZ  = GetAxis1Park();
   double parkAlt = GetAxis2Park();
 

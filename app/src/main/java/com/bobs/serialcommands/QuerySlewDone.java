@@ -43,7 +43,6 @@ public class QuerySlewDone extends MountCommand {
         boolean slewing = true;
         if (OPERATION_COMPLETE == message[0]) {
             slewing = false;
-        } else {
             LOGGER.info("{} Slew Complete", axis);
         }
         if (Axis.ALT == axis) {

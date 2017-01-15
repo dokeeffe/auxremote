@@ -67,7 +67,7 @@ public class MountController {
         } else if ("sync".equals(target.getType())) {
             mountService.sync(target);
         } else if ("slew".equals(target.getType())) {
-            mountService.slew(target);
+            mountService.slew(target, false);
         } else if ("guide".equals(target.getType())) {
             mountService.guide(target);
         }

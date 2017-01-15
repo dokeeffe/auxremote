@@ -76,23 +76,32 @@ public class MountService {
      * This is a non blocking operation. Clients should perform regular queries to determine if the slew is complete.
      *
      * @param target The {@link Target} to go to.
+     * @param parkSlew if True then the slew is to park the scope
      */
     @Async
-    public void slew(Target target) {
+    public void slew(Target target, boolean parkSlew) {
         if (!mount.isAligned()) {
             throw new IllegalStateException("Please sync/align the mount before slewing");
         }
         LOGGER.info("Slewing to RA:{} DEC:{}", target.getRaHours(), target.getDec());
-        mount.setTrackingState(TrackingState.SLEWING);
-        if (fastSlewRequired(mount, target)) {
-            slewAndWait(target, true);
+        if (parkSlew) {
+            mount.setTrackingState(TrackingState.PARKING);
+        } else {
+            mount.setTrackingState(TrackingState.SLEWING);
         }
-        slewAndWait(target, false);
+        if (fastSlewRequired(mount, target)) {
+            slewAndWait(target, true, parkSlew);
+        }
+        slewAndWait(target, false, parkSlew);
         //update position from mount.
         auxAdapter.queueCommand(new QueryAzMcPosition(mount));
         auxAdapter.queueCommand(new QueryAltMcPosition(mount));
         auxAdapter.waitForQueueEmpty();
-        mount.setTrackingState(TrackingState.TRACKING);
+        if (parkSlew) {
+            mount.setTrackingState(TrackingState.PARKED);
+        } else {
+            mount.setTrackingState(TrackingState.TRACKING);
+        }
     }
 
     /**
@@ -101,8 +110,9 @@ public class MountService {
      *
      * @param target the @{link Target} to slew to
      * @param fast   true/false for fast/slow slew
+     * @param parkingSlew if true then the slew is to park the scope
      */
-    private void slewAndWait(Target target, boolean fast) {
+    private void slewAndWait(Target target, boolean fast, boolean parkingSlew) {
         mount.setAltSlewInProgress(true);
         mount.setAzSlewInProgress(true);
         AltAz altAz = new AltAz();
@@ -148,7 +158,7 @@ public class MountService {
     public Target park(Target target) {
         LOGGER.warn("PARKING MOUNT");
         mount.setTrackingState(TrackingState.PARKING);
-        slew(target);
+        slew(target, true);
         auxAdapter.queueCommand(new SetGuideRate(mount, MountCommand.AZM_BOARD, GuideRate.OFF));
         auxAdapter.queueCommand(new SetGuideRate(mount, MountCommand.ALT_BOARD, GuideRate.OFF));
         auxAdapter.waitForQueueEmpty();
@@ -207,11 +217,11 @@ public class MountService {
         auxAdapter.queueCommand(new EnableCordWrap(mount));
         auxAdapter.queueCommand(new QueryCordWrap(mount));
         //FIXME: remove next 3 lines, just for POC testing. Need to query the GPS module instead.
-//        mount.setGpsLat(52.25288940983352);
-//        mount.setGpsLon(351.639317967851);
-//        mount.setLocationSet(true);
+        mount.setGpsLat(52.25288940983352);
+        mount.setGpsLon(351.639317967851);
+        mount.setLocationSet(true);
         if (!mount.isLocationSet() || mount.getGpsLat()==null || mount.getGpsLon()==null) {
-            waitForGps();
+//            waitForGps();
         }
         return true;
     }

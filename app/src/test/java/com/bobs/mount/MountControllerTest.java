@@ -78,7 +78,7 @@ public class MountControllerTest {
         Target target = new Target();
         target.setType("slew");
         sut.target(target);
-        verify(mountService).slew(target);
+        verify(mountService).slew(target, false);
     }
 
     @Test
