@@ -22,13 +22,15 @@ public class SerialPortBuilder {
     public SerialPort buildSerialPortForHandset(String serialPortName) {
         SerialPort serialPort = new SerialPort(serialPortName);
         try {
+            serialPort.openPort();
             serialPort.setParams(SerialPort.BAUDRATE_9600,
                     SerialPort.DATABITS_8,
                     SerialPort.STOPBITS_1,
                     SerialPort.PARITY_NONE);
             serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
+            LOGGER.info("Serial port opened");
         } catch (SerialPortException ex) {
-            LOGGER.error("failure connecting to port", ex);
+            LOGGER.error("failure connecting to / opening port", ex);
             //TODO: Throw an exception here and update the indi driver (client) to get notified on connection failure
         }
         return serialPort;

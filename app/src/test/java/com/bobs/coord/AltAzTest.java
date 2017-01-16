@@ -1,6 +1,5 @@
 package com.bobs.coord;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Calendar;
@@ -46,7 +45,6 @@ public class AltAzTest {
     }
 
     @Test
-    @Ignore //(get better data)
     public void testBuildFromNexstarEqNorthForBetelgeuse() {
         double delta = 0.1;
         Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -64,7 +62,7 @@ public class AltAzTest {
         System.out.println("DEC diff " + (BETELGEUSE_DEC - result.getDec()));
         System.out.println("hours " + sut.convertRaDegToHours(result.getRaDeg()));
         assertEquals(BETELGEUSE_DEC, result.getDec(), delta);
-        assertEquals(5.9, result.getRaHours(), delta);
+        assertEquals(6.0, result.getRaHours(), delta);
     }
 
     @Test

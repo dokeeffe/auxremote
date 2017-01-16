@@ -69,13 +69,11 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
         }
         LOGGER.debug("Starting adapter for {}", serialPortName);
         this.serialPort = serialPortBuilder.buildSerialPortForHandset(serialPortName);
+        connected = true;
         try {
-            serialPort.openPort();
             serialPort.addEventListener(new AuxSerialPortEventListener(serialPort, outputChannel));
-            connected = true;
-            LOGGER.debug("port opened");
         } catch (SerialPortException e) {
-            LOGGER.error("Error opening port", e);
+            LOGGER.error("Error adding event listner port", e);
         }
         while (connected) {
             try {
