@@ -89,6 +89,7 @@ public class Mount implements Serializable {
      */
     private void setDefaults() {
         this.trackingState = TrackingState.IDLE;
+        this.guideRate = GuideRate.SIDEREAL;
         this.trackingMode = TrackingMode.EQ_NORTH; //currently the only one supported. Once others are developed then this will be loaded from persisted
         this.setPecMode(PecMode.IDLE);
     }

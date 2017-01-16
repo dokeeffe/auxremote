@@ -58,6 +58,7 @@ public class MountController {
      */
     @PostMapping("/target")
     public void target(@RequestBody Target target) {
+        LOGGER.info("target request");
         if ("park".equals(target.getType())) {
             mountService.park(target);
         } else if ("unpark".equals(target.getType())) {
