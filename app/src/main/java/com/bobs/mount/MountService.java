@@ -156,6 +156,9 @@ public class MountService {
      */
     @Async
     public Target park(Target target) {
+        if (!mount.isAligned()) {
+            throw new IllegalStateException("Please sync/align the mount before moving");
+        }
         LOGGER.warn("PARKING MOUNT");
         mount.setTrackingState(TrackingState.PARKING);
         slew(target, true);
@@ -341,7 +344,7 @@ public class MountService {
         if (!auxAdapter.isConnected()) {
             throw new IllegalStateException("Not Connected");
         }
-        LOGGER.debug("Getting mount. RA {}, DEC {}", mount.getRaHours(), mount.getDecDegrees());
+        //LOGGER.debug("Getting mount. RA {}, DEC {}", mount.getRaHours(), mount.getDecDegrees());
         return mount;
     }
 

@@ -6,7 +6,6 @@ import jssc.SerialPortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import javax.xml.bind.DatatypeConverter;
@@ -18,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  * Low level IO adapter class responsible for serial communication with the mount by means of {@link MountCommand} objects.
  * Since serial communication is a non blocking IO, Java {@link BlockingQueue}s are used as message channels to ensure the ordering of the messages being sent to the mount and response messages being read from the mount.
  */
-@Component
+//@Component
 public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
 
     /**

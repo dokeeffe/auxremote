@@ -1,16 +1,15 @@
 package com.bobs.mount;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.util.FileCopyUtils;
-import org.springframework.util.SerializationUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 
 /**
  * Basic bean responsible for storing the state of the actual physical mount.
@@ -21,9 +20,9 @@ import java.io.Serializable;
  * TODO: cleanup mess of objects and primitives used
  */
 @Component
-public class Mount implements Serializable {
+public class Mount {
 
-    public static final String AUXREMOTE_MOUNT_SER = "auxremote-mount.ser";
+    public static final String AUXREMOTE_MOUNT_JSON = "auxremote-mount.json";
     private static final Logger LOGGER = LoggerFactory.getLogger(Mount.class);
     private String version;
     private TrackingState trackingState;
@@ -55,19 +54,18 @@ public class Mount implements Serializable {
     @PostConstruct
     public void loadState() {
         setDefaults();
-        loadPersistedState(new File(System.getProperty("user.home"), AUXREMOTE_MOUNT_SER));
+        loadPersistedState(new File(System.getProperty("user.home"), AUXREMOTE_MOUNT_JSON));
     }
 
     /**
      * Load previously persisted mount state. Only a subset of properties are loaded
      *
-     * @param serFile
+     * @param json
      */
-    protected void loadPersistedState(File serFile) {
+    protected void loadPersistedState(File json) {
+        ObjectMapper om = new ObjectMapper();
         try {
-            File persistanceStore = serFile;
-            byte[] mountState = FileCopyUtils.copyToByteArray(persistanceStore);
-            Mount persisted = (Mount) SerializationUtils.deserialize(mountState);
+            Mount persisted = om.readValue(json, Mount.class);
             this.gpsLat = persisted.getGpsLat();
             this.gpsLon = persisted.getGpsLon();
             this.locationSet = persisted.isLocationSet();
@@ -80,8 +78,9 @@ public class Mount implements Serializable {
                 this.aligned = persisted.isAligned();
             }
         } catch (Exception e) {
-            LOGGER.warn("Error restoring mount state from serialised. Not a big problem. Using defaults.", e);
+            LOGGER.warn("Could not load saved state, using defaults", e);
         }
+
     }
 
     /**
@@ -96,13 +95,13 @@ public class Mount implements Serializable {
 
     @PreDestroy
     public void saveState() {
-        byte[] mountState = SerializationUtils.serialize(this);
-        File persistanceStore = new File(System.getProperty("user.home"), "auxremote-mount.ser");
+        ObjectMapper om = new ObjectMapper();
         try {
-            FileCopyUtils.copy(mountState, persistanceStore);
+            om.writeValue(new FileOutputStream(new File(System.getProperty("user.home"), AUXREMOTE_MOUNT_JSON)), this);
         } catch (IOException e) {
-            LOGGER.warn("Error saving mount state", e);
+            LOGGER.warn("error saving mount state", e);
         }
+
     }
 
     public String getVersion() {
