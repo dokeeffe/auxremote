@@ -199,7 +199,10 @@ public class MountServiceTest {
         assertEquals(QueryCordWrapPos.class, queuedCommands.get(0).getClass());
         assertEquals(EnableCordWrap.class, queuedCommands.get(1).getClass());
         assertEquals(QueryCordWrap.class, queuedCommands.get(2).getClass());
-        assertEquals(3, queuedCommands.size());
+        assertEquals(SetGuideRate.class, queuedCommands.get(3).getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.get(4).getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.get(5).getClass());
+        assertEquals(6, queuedCommands.size());
     }
 
     @Test
@@ -538,8 +541,7 @@ public class MountServiceTest {
 
     @Test
     public void startPecOperation_index() throws Exception {
-        mount.setPecMode(PecMode.INDEXING);
-        mountService.startPecOperation();
+        mountService.startPecOperation(PecMode.INDEXING);
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
         assertEquals(2, queuedCommands.size());
         assertEquals(PecSeekIndex.class, queuedCommands.get(0).getClass());
@@ -549,8 +551,7 @@ public class MountServiceTest {
 
     @Test
     public void startPecOperation_rec() throws Exception {
-        mount.setPecMode(PecMode.RECORDING);
-        mountService.startPecOperation();
+        mountService.startPecOperation(PecMode.RECORDING);
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
         assertEquals(2, queuedCommands.size());
         assertEquals(PecStartRecording.class, queuedCommands.get(0).getClass());
@@ -560,8 +561,7 @@ public class MountServiceTest {
 
     @Test
     public void startPecOperation_play() throws Exception {
-        mount.setPecMode(PecMode.PLAYING);
-        mountService.startPecOperation();
+        mountService.startPecOperation(PecMode.PLAYING);
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
         assertEquals(1, queuedCommands.size());
         assertEquals(PecPlayback.class, queuedCommands.get(0).getClass());
@@ -570,8 +570,7 @@ public class MountServiceTest {
 
     @Test
     public void startPecOperation_idle() throws Exception {
-        mount.setPecMode(PecMode.IDLE);
-        mountService.startPecOperation();
+        mountService.startPecOperation(PecMode.IDLE);
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
         assertEquals(2, queuedCommands.size());
         assertEquals(PecStopRecording.class, queuedCommands.get(0).getClass());

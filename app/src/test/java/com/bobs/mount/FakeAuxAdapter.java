@@ -39,6 +39,9 @@ public class FakeAuxAdapter implements NexstarAuxAdapter {
         if (command instanceof PecQueryRecordDone) {
             mount.setPecMode(PecMode.IDLE);
         }
+        if (command instanceof PecPlayback) {
+            mount.setPecMode(PecMode.PLAYING);
+        }
         if (command instanceof GpsLinked) {
             mount.setGpsConnected(true);
         }
@@ -64,6 +67,10 @@ public class FakeAuxAdapter implements NexstarAuxAdapter {
         return this.connected;
     }
 
+    public void setConnected(boolean connected) {
+        this.connected = connected;
+    }
+
     @Override
     public void setSerialPortName(String serialPortName) {
         this.serialPortName = serialPortName;
@@ -76,9 +83,5 @@ public class FakeAuxAdapter implements NexstarAuxAdapter {
 
     public List<MountCommand> getQueuedCommands() {
         return this.commands;
-    }
-
-    public void setConnected(boolean connected) {
-        this.connected = connected;
     }
 }

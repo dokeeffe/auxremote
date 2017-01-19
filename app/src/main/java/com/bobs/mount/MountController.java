@@ -34,7 +34,8 @@ public class MountController {
     @PostMapping("")
     public Mount updateMount(@RequestBody Mount mount) {
         LOGGER.info("Updating Mount");
-        return mountService.updateMount(mount);
+        mountService.updateMount(mount);
+        return mount;
     }
 
 

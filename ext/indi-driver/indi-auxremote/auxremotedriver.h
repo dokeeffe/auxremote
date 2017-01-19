@@ -49,6 +49,7 @@ private:
 
   bool SendPostRequest(const char *json_payload,const char *path);
   double currentRA, currentDEC;
+  bool pecIndexFound;
 
   /* API endpoint */
   IText httpEndpointT[1];

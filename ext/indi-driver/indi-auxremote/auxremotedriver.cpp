@@ -185,15 +185,38 @@ bool AuxRemote::ISNewSwitch (const char *dev, const char *name, ISState *states,
         PecModeSP.s = IPS_IDLE;
         for (int i=0; i < n; i++)
         {
-            if (!strcmp(names[i], "FIND_INDEX") && states[i] == ISS_ON)
-                DEBUG(INDI::Logger::DBG_DEBUG,  "PEC Find index");
-            else if (!strcmp(names[i], "RECORD") && states[i] == ISS_ON)
-                DEBUG(INDI::Logger::DBG_DEBUG,  "PEC Start Record");
-            else if (!strcmp(names[i], "PLAY") && states[i] == ISS_ON)
-                DEBUG(INDI::Logger::DBG_DEBUG,  "PEC Start Play");
-            else if (!strcmp(names[i], "STOP") && states[i] == ISS_ON)
-                DEBUG(INDI::Logger::DBG_DEBUG,  "Stop Rec/Play");
-
+            if (!strcmp(names[i], "FIND_INDEX") && states[i] == ISS_ON) {
+              if (TrackState == SCOPE_PARKED) {
+                DEBUG(INDI::Logger::DBG_ERROR, "Unpark Mount before using PEC");
+              } else {
+                SendPostRequest("{\"pecMode\": \"INDEXING\"}","/mount");
+              }
+            }
+            else if (!strcmp(names[i], "RECORD") && states[i] == ISS_ON){
+              if (TrackState == SCOPE_PARKED) {
+                DEBUG(INDI::Logger::DBG_ERROR, "Unpark Mount before using PEC");
+              } else {
+                if(pecIndexFound) {
+                  SendPostRequest("{\"pecMode\": \"RECORDING\"}","/mount");
+                } else {
+                  DEBUG(INDI::Logger::DBG_ERROR, "PEC Index not found. Please find index first");
+                }
+              }
+            }
+            else if (!strcmp(names[i], "PLAY") && states[i] == ISS_ON) {
+              if (TrackState == SCOPE_PARKED) {
+                DEBUG(INDI::Logger::DBG_ERROR, "Unpark Mount before using PEC");
+              } else {
+                if(pecIndexFound) {
+                  SendPostRequest("{\"pecMode\": \"PLAYING\"}","/mount");
+                } else {
+                  DEBUG(INDI::Logger::DBG_ERROR, "PEC Index not found. Please find index first");
+                }
+              }
+            }
+            else if (!strcmp(names[i], "STOP") && states[i] == ISS_ON){
+                SendPostRequest("{\"pecMode\": \"IDLE\"}","/mount");
+            }
         }
         PecModeSP.s = IPS_OK;
     }
@@ -277,9 +300,11 @@ bool AuxRemote::ReadScopeStatus() {
             if (!strcmp(it->key, "decDegrees")) {
                 dec = it->value.toNumber();
             }
+            if (!strcmp(it->key, "pecIndexFound")) {
+                pecIndexFound = (it->value.getTag()==JSON_TRUE);
+            }
             if (!strcmp(it->key, "pecMode")) {
               char *pecState = it->value.toString();
-              DEBUGF(INDI::Logger::DBG_DEBUG, "PecMode= %s", pecState);
               PecT[0].text = pecState;
               IDSetText(&PecTP,NULL);
             }

@@ -179,6 +179,7 @@ public class MountService {
         LOGGER.info("Unparking and syncing to {}, {}", target.getRaHours(), target.getDec());
         startTracking();
         sync(target);
+        //TODO: If option set to start PEC on unpark then send pecplayback command here
     }
 
     /**
@@ -220,6 +221,9 @@ public class MountService {
         auxAdapter.queueCommand(new QueryCordWrapPos(mount));
         auxAdapter.queueCommand(new EnableCordWrap(mount));
         auxAdapter.queueCommand(new QueryCordWrap(mount));
+        if (mount.getTrackingState() == TrackingState.TRACKING) {
+            startTracking();
+        }
         //FIXME: remove next 3 lines, just for POC testing. Need to query the GPS module instead.
         mount.setGpsLat(52.25288940983352);
         mount.setGpsLon(351.639317967851);
@@ -367,7 +371,8 @@ public class MountService {
      * @param newMount
      * @return
      */
-    public Mount updateMount(Mount newMount) {
+    @Async
+    public void updateMount(Mount newMount) {
         if (newMount.getSerialPort() != null && newMount.getSerialPort() != mount.getSerialPort()) {
             mount.setSerialPort(newMount.getSerialPort());
         }
@@ -382,36 +387,45 @@ public class MountService {
             mount.setSlewLimitAz(newMount.getSlewLimitAz());
         }
         if (newMount.getPecMode() != null && newMount.getPecMode() != mount.getPecMode()) {
-            mount.setPecMode(newMount.getPecMode());
-            startPecOperation();
+            startPecOperation(newMount.getPecMode());
         }
-        return mount;
     }
 
+
     /**
-     * FIXME: pec start rec seems to get triggered on connect from indi driver
+     * Start a PEC operation depending on the mount state
+     * @param pecMode
      */
-    @Async
-    public void startPecOperation() {
-        LOGGER.info("Setting PEC mode to {]", mount.getPecMode());
-        if (mount.getPecMode().equals(PecMode.INDEXING)) {
-            mount.setPecIndexFound(false);
-            auxAdapter.queueCommand(new PecSeekIndex(mount));
-            while (!mount.isPecIndexFound()) {
-                auxAdapter.queueCommand(new PecQueryAtIndex(mount));
-                sleep(pecPollInterval);
-            }
-        } else if (mount.getPecMode().equals(PecMode.RECORDING)) {
-            auxAdapter.queueCommand(new PecStartRecording(mount));
-            while (mount.getPecMode().equals(PecMode.RECORDING)) {
-                auxAdapter.queueCommand(new PecQueryRecordDone(mount));
-                sleep(pecPollInterval);
-            }
-        } else if (mount.getPecMode().equals(PecMode.PLAYING)) {
-            auxAdapter.queueCommand(new PecPlayback(mount, true));
-        } else if (mount.getPecMode().equals(PecMode.IDLE)) {
-            auxAdapter.queueCommand(new PecStopRecording(mount));
-            auxAdapter.queueCommand(new PecPlayback(mount, false));
+    public void startPecOperation(PecMode pecMode) {
+        LOGGER.info("Setting PEC mode to {}", pecMode);
+        switch (pecMode) {
+            case INDEXING:
+                mount.setPecIndexFound(false);
+                auxAdapter.queueCommand(new PecSeekIndex(mount));
+                while (!mount.isPecIndexFound()) {
+                    auxAdapter.queueCommand(new PecQueryAtIndex(mount));
+                    sleep(pecPollInterval);
+                }
+                break;
+            case RECORDING:
+                mount.setPecMode(PecMode.RECORDING);
+                auxAdapter.queueCommand(new PecStartRecording(mount));
+                while (mount.getPecMode().equals(PecMode.RECORDING)) {
+                    auxAdapter.queueCommand(new PecQueryRecordDone(mount));
+                    sleep(pecPollInterval);
+                }
+                break;
+            case PLAYING:
+                if (mount.getPecMode() == PecMode.RECORDING) {
+                    LOGGER.warn("Mount currently recording, not starting playback");
+                } else {
+                    auxAdapter.queueCommand(new PecPlayback(mount, true));
+                }
+                break;
+            case IDLE:
+                auxAdapter.queueCommand(new PecStopRecording(mount));
+                auxAdapter.queueCommand(new PecPlayback(mount, false));
+                break;
         }
     }
 
