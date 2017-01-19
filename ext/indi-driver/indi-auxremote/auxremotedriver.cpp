@@ -18,6 +18,7 @@
 #include "auxremotedriver.h"
 
 #define	POLLMS      1000
+#define PEC_TAB   "PEC"
 
 std::unique_ptr<AuxRemote> aux_remote(new AuxRemote());
 
@@ -77,6 +78,17 @@ bool AuxRemote::initProperties() {
   INDI::Telescope::initProperties();
   IUFillText(&httpEndpointT[0], "API_ENDPOINT", "API Endpoint", "http://localhost:8080/api");
   IUFillTextVector(&httpEndpointTP, httpEndpointT, 1, getDeviceName(), "HTTP_API_ENDPOINT", "HTTP endpoint", OPTIONS_TAB, IP_RW, 5, IPS_IDLE);
+
+  //pec tab
+  IUFillText(&PecT[0], "State", "state", "UNKNOWN");
+  IUFillTextVector(&PecTP, PecT, 1, getDeviceName(), "PEC_STATE", "PEC", PEC_TAB, IP_RO, 60, IPS_IDLE);
+  IUFillSwitch(&PecModeS[0], "FIND_INDEX", "Find Index", ISS_OFF);
+  IUFillSwitch(&PecModeS[1], "RECORD", "Start Recording", ISS_OFF);
+  IUFillSwitch(&PecModeS[2], "PLAY", "Start Playback", ISS_OFF);
+  IUFillSwitch(&PecModeS[3], "STOP", "Stop Rec/Play", ISS_OFF);
+  IUFillSwitchVector(&PecModeSP, PecModeS, 4, getDeviceName(), "PEC_MODE", "Pec Mode", PEC_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+
+
   TrackState=SCOPE_IDLE;
   initGuiderProperties(getDeviceName(), MOTION_TAB);
   addDebugControl();
@@ -86,7 +98,6 @@ bool AuxRemote::initProperties() {
 }
 
 bool AuxRemote::saveConfigItems(FILE *fp) {
-  DEBUG(INDI::Logger::DBG_ERROR, "**save conf");
   INDI::Telescope::saveConfigItems(fp);
   IUSaveConfigText(fp, &httpEndpointTP);
   return true;
@@ -95,12 +106,14 @@ bool AuxRemote::saveConfigItems(FILE *fp) {
 void AuxRemote::ISGetProperties(const char *dev) {
   INDI::Telescope::ISGetProperties (dev);
   defineText(&httpEndpointTP);
+  defineText(&PecTP);
+  defineSwitch(&PecModeSP);
+
 }
 
 bool AuxRemote::updateProperties() {
-  DEBUG(INDI::Logger::DBG_ERROR, "**update props");
   INDI::Telescope::updateProperties();
-
+  DEBUG(INDI::Logger::DBG_DEBUG, "**updateProperties ");
   if (isConnected())
   {
     defineNumber(&GuideNSNP);
@@ -108,7 +121,6 @@ bool AuxRemote::updateProperties() {
 
 
     if (InitPark()) {
-        DEBUG(INDI::Logger::DBG_ERROR, "**initpark");
         // If loading parking data is successful, we just set the default parking values.
         double HA = ln_get_apparent_sidereal_time(ln_get_julian_from_sys());
         double DEC = 90;
@@ -141,7 +153,7 @@ bool AuxRemote::updateProperties() {
 }
 
 bool AuxRemote::ISNewNumber (const char *dev, const char *name, double values[], char *names[], int n) {
-    DEBUG(INDI::Logger::DBG_ERROR, "**ISNewNumber");
+    DEBUGF(INDI::Logger::DBG_DEBUG, "**ISNewNumber %s", name);
     if(strcmp(dev,getDeviceName())==0)
     {
         if (!strcmp(name,GuideNSNP.name) || !strcmp(name,GuideWENP.name))
@@ -155,7 +167,7 @@ bool AuxRemote::ISNewNumber (const char *dev, const char *name, double values[],
 }
 
 bool AuxRemote::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n) {
-  DEBUG(INDI::Logger::DBG_ERROR, "**ISNewText");
+  DEBUGF(INDI::Logger::DBG_DEBUG, "**ISNewText %s", name);
   if(!strcmp(dev, getDeviceName())) {
     if (!strcmp(httpEndpointTP.name, name)) {
         IUUpdateText(&httpEndpointTP, texts, names, n);
@@ -165,6 +177,28 @@ bool AuxRemote::ISNewText(const char *dev, const char *name, char *texts[], char
     }
   }
   return Telescope::ISNewText(dev,name,texts,names,n);
+}
+
+bool AuxRemote::ISNewSwitch (const char *dev, const char *name, ISState *states, char *names[], int n) {
+  if (!strcmp (getDeviceName(), dev)) {
+    if (!strcmp(name, PecModeSP.name)) {
+        PecModeSP.s = IPS_IDLE;
+        for (int i=0; i < n; i++)
+        {
+            if (!strcmp(names[i], "FIND_INDEX") && states[i] == ISS_ON)
+                DEBUG(INDI::Logger::DBG_DEBUG,  "PEC Find index");
+            else if (!strcmp(names[i], "RECORD") && states[i] == ISS_ON)
+                DEBUG(INDI::Logger::DBG_DEBUG,  "PEC Start Record");
+            else if (!strcmp(names[i], "PLAY") && states[i] == ISS_ON)
+                DEBUG(INDI::Logger::DBG_DEBUG,  "PEC Start Play");
+            else if (!strcmp(names[i], "STOP") && states[i] == ISS_ON)
+                DEBUG(INDI::Logger::DBG_DEBUG,  "Stop Rec/Play");
+
+        }
+        PecModeSP.s = IPS_OK;
+    }
+  }
+  return Telescope::ISNewSwitch(dev,name,states,names,n);
 }
 
 bool AuxRemote::Connect() {
@@ -196,7 +230,7 @@ bool AuxRemote::Disconnect() {
 
 bool AuxRemote::ReadScopeStatus() {
   bool result = false;
-  DEBUGF(INDI::Logger::DBG_DEBUG, "Reading status from %s",httpEndpointT[0].text);
+  //DEBUGF(INDI::Logger::DBG_DEBUG, "Reading status from %s",httpEndpointT[0].text);
   CURL *curl;
   CURLcode res;
   std::string readBuffer;
@@ -230,7 +264,7 @@ bool AuxRemote::ReadScopeStatus() {
             DEBUG(INDI::Logger::DBG_ERROR, "NON OK response from service");
             result = false;
         }
-        DEBUGF(INDI::Logger::DBG_DEBUG, "http response %s", readBuffer.c_str());
+        DEBUGF(INDI::Logger::DBG_DEBUG, "Resp %s", readBuffer.c_str());
         JsonIterator it;
         double ra;
         double dec;
@@ -243,6 +277,12 @@ bool AuxRemote::ReadScopeStatus() {
             if (!strcmp(it->key, "decDegrees")) {
                 dec = it->value.toNumber();
             }
+            if (!strcmp(it->key, "pecMode")) {
+              char *pecState = it->value.toString();
+              DEBUGF(INDI::Logger::DBG_DEBUG, "PecMode= %s", pecState);
+              PecT[0].text = pecState;
+              IDSetText(&PecTP,NULL);
+            }
             if (!strcmp(it->key, "trackingState")) {
               char *ts = it->value.toString();
               //DEBUGF(INDI::Logger::DBG_DEBUG, "TrackingState= %s", ts);
@@ -254,7 +294,6 @@ bool AuxRemote::ReadScopeStatus() {
                 EqNP.s = IPS_OK;
               }
               if(strcmp(ts,"SLEWING")==0) {
-                DEBUG(INDI::Logger::DBG_SESSION, "status Slewing");
                 TrackState = SCOPE_SLEWING;
                 EqNP.s = IPS_BUSY;
               }
@@ -264,26 +303,23 @@ bool AuxRemote::ReadScopeStatus() {
                 EqNP.s = IPS_BUSY;
               }
               if(strcmp(ts,"PARKED")==0) {
-                DEBUG(INDI::Logger::DBG_SESSION, "Entering parked logic");
+                DEBUG(INDI::Logger::DBG_SESSION, "State Parked");
                 if(TrackState == SCOPE_PARKING || TrackState == SCOPE_SLEWING) {
                   SetParked(true);
                   DEBUG(INDI::Logger::DBG_SESSION, "Park succesfull");
                   sleep(5);
                   TrackState = SCOPE_PARKED;
                   EqNP.s = IPS_OK;
-                  DEBUG(INDI::Logger::DBG_SESSION, "Leavingg parked logic");
                 }
               }
             }
         }
-        DEBUG(INDI::Logger::DBG_SESSION, "Setting new RA DEC");
         NewRaDec(ra, dec);
         currentRA = ra;
         currentDEC = dec;
         result = true;
       }
     }
-    DEBUG(INDI::Logger::DBG_SESSION, "**Leaving ReadScopeStatus");
     return result;
 }
 
@@ -425,7 +461,6 @@ void AuxRemote::SetDefaultPark() {
 
 
 bool AuxRemote::UnPark() {
-  DEBUG(INDI::Logger::DBG_ERROR, "**unpark");
   double parkAZ  = GetAxis1Park();
   double parkAlt = GetAxis2Park();
 

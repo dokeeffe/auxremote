@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auxremote</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link href="css/auxremote.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+
+    <div hidden class="alert alert-danger" role="alert">
+        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+        <span class="sr-only">Error:</span>
+        Could not connect to mount. Check Serial settings.
+    </div>
+
+    <div>
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Control</a>
+            </li>
+            <li role="presentation"><a href="#settings" aria-controls="settings" role="tab"
+                                       data-toggle="tab">Settings</a></li>
+            <li role="presentation"><a href="#pec" aria-controls="pec" role="tab" data-toggle="tab">PEC</a></li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="home">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="well well-lg">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <input class="form-control" id="handsetScreen" type="text"
+                                           placeholder="RA: 11:33:34  DEC: -02:23:19"
+                                           disabled>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="well well-lg">
+                            <div class="row">
+                                <div class="col-xs-4 col-xs-offset-4">
+                                    <label type="button" id="north" class="btn btn-primary btn-lg">
+                                        <span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-xs-2 col-xs-offset-2">
+                                    <button type="button" id="east" class="btn btn-primary btn-lg">
+                                        <span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="col-xs-2">
+                                    <button type="button" id="stop" class="btn btn-primary btn-lg">
+                                        <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="col-xs-2">
+                                    <button type="button" id="west" class="btn btn-primary btn-lg">
+                                        <span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-2 col-xs-offset-4">
+                                    <button type="button" id="south" class="btn btn-primary btn-lg">
+                                        <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="settings">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-xs-3 control-label">Tracking</label>
+                                <div class="col-xs-9">
+                                    <div class="btn-group" id="tracking" data-toggle="buttons">
+                                        <label id="trackingOff" class="btn btn-primary active">
+                                            <input type="radio" name="options" autocomplete="off" checked>
+                                            OFF
+                                        </label>
+                                        <label id="trackingOn" class="btn btn-primary">
+                                            <input type="radio" name="options" autocomplete="off"> EQ NORTH
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-xs-3 control-label">Serial Port</label>
+                                <div class="col-xs-5">
+                                    <input type="text" class="form-control" id="serialPort" placeholder="/dev/ttyUSB0"/>
+                                </div>
+                            </div>
+
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="pec">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-xs-3 control-label">Index</label>
+                                <div class="col-xs-3">
+                                    <button type="button" id="indexSeek" data-loading-text="Connecting..."
+                                            class="btn btn-primary" autocomplete="off">
+                                        <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>Find Index
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-xs-3 control-label">Status</label>
+                                <div class="col-xs-6">
+                                    <input class="form-control" id="pecMode" type="text" placeholder="UNKNOWN" disabled>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-xs-3 control-label">Playback</label>
+                                <div class="col-xs-3">
+                                    <button type="button" id="pecPlay" disabled="disabled" class="btn btn-primary"
+                                            autocomplete="off">
+                                        <span class="glyphicon glyphicon-play" aria-hidden="true"></span>Play
+                                    </button>
+                                </div>
+                                <div class="col-xs-3">
+                                    <button type="button" id="pecStopPlay" disabled="disabled" class="btn btn-primary"
+                                            autocomplete="off">
+                                        <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>Stop
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-xs-3 control-label">Record</label>
+                                <div class="col-xs-3">
+                                    <button type="button" id="pecRecord" disabled="disabled" class="btn btn-primary"
+                                            autocomplete="off">
+                                        <span class="glyphicon glyphicon-record" aria-hidden="true"></span>Rec
+                                    </button>
+                                </div>
+                                <div class="col-xs-3">
+                                    <button type="button" id="pecStopRecord" disabled="disabled" class="btn btn-primary"
+                                            autocomplete="off">
+                                        <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>Stop
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/bootstrap.min.js"></script>
+<script src="js/auxremote.js"></script>
+</body>
+</html>

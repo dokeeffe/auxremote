@@ -18,6 +18,8 @@ public:
   void ISGetProperties(const char *dev);
   bool ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n);
   bool ISNewNumber (const char *dev, const char *name, double values[], char *names[], int n);
+  bool ISNewSwitch (const char *dev, const char *name, ISState *states, char *names[], int n);
+
   virtual bool Connect();
   virtual bool Disconnect();
   virtual bool updateProperties();
@@ -48,8 +50,15 @@ private:
   bool SendPostRequest(const char *json_payload,const char *path);
   double currentRA, currentDEC;
 
+  /* API endpoint */
   IText httpEndpointT[1];
   ITextVectorProperty httpEndpointTP;
+
+  /* PEC */
+  IText PecT[1];
+  ITextVectorProperty PecTP;
+  ISwitch PecModeS[4];
+  ISwitchVectorProperty PecModeSP;
 
 };
 
