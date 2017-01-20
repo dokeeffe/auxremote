@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 import static com.bobs.serialcommands.MountCommand.*;
 
 /**
- * A sumilator adapter for testing clients such as INDI
+ * A simulator adapter for testing clients such as INDI
  */
 @Component
 public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
@@ -23,13 +23,19 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
 
 
     /**
+     * manage state of long running operations. When called n times then fake operation deemed complete
+     */
+    private static final int DEFAULT_LONG_RUNNING_OP_CYCLES = 5;
+    private int longRunningOperationCycles = DEFAULT_LONG_RUNNING_OP_CYCLES;
+    private int fakeOperationTimerCounter;
+
+    /**
      * Channels are defined to sequence messages and order the responses.
      */
     private BlockingQueue<MountCommand> inputChannel = new LinkedBlockingQueue<>(1000);
 
     private boolean connected;
     private String serialPortName;
-    private int defaultFakeOperationTimerCounter;
 
     /**
      * Queue a serial command. Serial commands are only issued in series (one after another)
@@ -41,7 +47,6 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
     public void queueCommand(MountCommand command) {
         this.inputChannel.add(command);
     }
-
 
     /**
      * Start this adapter. This normally needs to start in a new thread.
@@ -59,16 +64,16 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
             }
             LOGGER.info("Fake adapter processing {}", command.getClass());
             if (command instanceof PecQueryAtIndex) {
-                fakeLongRunningOperation(command, 2);
+                fakeLongRunningOperation(command, longRunningOperationCycles);
             }
             if (command instanceof PecPlayback) {
                 command.handleMessage(new byte[]{ACK});
             }
             if (command instanceof PecQueryRecordDone) {
-                fakeLongRunningOperation(command, 10);
+                fakeLongRunningOperation(command, longRunningOperationCycles);
             }
             if (command instanceof QuerySlewDone) {
-                fakeLongRunningOperation(command, 10);
+                fakeLongRunningOperation(command, longRunningOperationCycles);
             }
             if (command instanceof Move) {
                 command.handleMessage(new byte[]{ACK});
@@ -77,11 +82,11 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
     }
 
     private void fakeLongRunningOperation(MountCommand command, int callsTillDone) {
-        if (defaultFakeOperationTimerCounter > callsTillDone) {
+        fakeOperationTimerCounter++;
+        if (fakeOperationTimerCounter >= callsTillDone) {
             command.handleMessage(new byte[]{OPERATION_COMPLETE});
-            defaultFakeOperationTimerCounter = 0;
+            fakeOperationTimerCounter = 0;
         } else {
-            defaultFakeOperationTimerCounter++;
             command.handleMessage(new byte[]{OPERATION_PENDING});
         }
     }

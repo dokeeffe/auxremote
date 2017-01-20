@@ -35,6 +35,7 @@ public class AltAz {
         return utc;
     }
 
+
     public Target buildFromRaDec(Calendar calendar, double lat, double lon, double ra, double dec) {
         Calendar utc = convertCalendarToUtcCalendar(calendar);
         double lst = localSiderealTime(utc, lon);
