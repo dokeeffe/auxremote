@@ -106,7 +106,7 @@ public class MountService {
 
     /**
      * Blocking operation to slew and wait until complete.
-     * Waits for each axis to complete in series. This is to minimise serial traffic which can interfere with slew in a dangerous way!
+     * Waits for each axis to complete.
      *
      * @param target the @{link Target} to slew to
      * @param fast   true/false for fast/slow slew
@@ -124,14 +124,27 @@ public class MountService {
         LOGGER.debug("starting slew");
         auxAdapter.queueCommand(new Goto(mount, altitudeAxisDegrees, Axis.ALT, fast));
         auxAdapter.queueCommand(new Goto(mount, azimuthAxisDegrees, Axis.AZ, fast));
-        while (mount.isAzSlewInProgress()) {
-            auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.AZ));
-            sleep(500);
+        while (mount.isAzSlewInProgress() || mount.isAltSlewInProgress()) {
+            LOGGER.debug("monitoring slew");
+            if (mount.isAzSlewInProgress()) {
+                auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.AZ));
+                sleep(500);
+            }
+            if (mount.isAltSlewInProgress()) {
+                auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.ALT));
+                sleep(500);
+                enforceAltSlewLimit();
+            }
         }
-        while (mount.isAltSlewInProgress()) {
-            auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.ALT));
-            sleep(500);
-        }
+    }
+
+
+    /**
+     * Enforce an ALT slew limit for the ALT axis to prevent damage.
+     * If limit detected then send serial commands to abort any motion
+     */
+    private void enforceAltSlewLimit() {
+        //TOOD:
     }
 
     /**
@@ -224,13 +237,10 @@ public class MountService {
         if (mount.getTrackingState() == TrackingState.TRACKING) {
             startTracking();
         }
-        //FIXME: remove next 3 lines, just for POC testing. Need to query the GPS module instead.
+        //FIXME: remove next 3 lines, just for POC testing. Need to query the GPS module instead or get from INDI driver.
         mount.setGpsLat(52.25288940983352);
         mount.setGpsLon(351.639317967851);
         mount.setLocationSet(true);
-        if (!mount.isLocationSet() || mount.getGpsLat()==null || mount.getGpsLon()==null) {
-//            waitForGps();
-        }
         return true;
     }
 
@@ -348,7 +358,7 @@ public class MountService {
         if (!auxAdapter.isConnected()) {
             throw new IllegalStateException("Not Connected");
         }
-        //LOGGER.debug("Getting mount. RA {}, DEC {}", mount.getRaHours(), mount.getDecDegrees());
+        LOGGER.debug("Getting mount. RA {}, DEC {}", mount.getRaHours(), mount.getDecDegrees());
         return mount;
     }
 

@@ -28,12 +28,24 @@ public class QueryAltMcPositionTest extends BaseCommandTest {
 
     @Test
     public void handleMessage() {
+        mount.setDecDegrees(-80.0);
         byte[] message = new byte[4];
         message[0] = (byte) 0x01;
         message[1] = (byte) 0xB8;
         message[2] = (byte) 0xCF;
         sut.handleMessage(message);
         assertEquals(-79.8, mount.getDecDegrees(), 0.1);
+    }
+
+    @Test
+    public void handleMessage_badData() {
+        mount.setDecDegrees(1.1);
+        byte[] message = new byte[4];
+        message[0] = (byte) 0x01;
+        message[1] = (byte) 0xB8;
+        message[2] = (byte) 0xCF;
+        sut.handleMessage(message);
+        assertEquals(1.1, mount.getDecDegrees(), 0.1);
     }
 
     @Test(expected = UnsupportedOperationException.class)

@@ -10,14 +10,16 @@ import org.slf4j.LoggerFactory;
 import javax.xml.bind.DatatypeConverter;
 import java.util.Calendar;
 
+import static java.lang.Math.abs;
+
 /**
  * Created by dokeeffe on 25/12/16.
  */
 public class QueryAzMcPosition extends MountCommand {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(QueryAzMcPosition.class);
     public static final byte MESSAGE_LENGTH = 0x01;
     public static final byte RESPONSE_LENGTH = 0x03;
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueryAzMcPosition.class);
 
     public QueryAzMcPosition(Mount mount) {
         super(mount);
@@ -47,7 +49,11 @@ public class QueryAzMcPosition extends MountCommand {
             //FIXME: NPE when gps lat lon are null
             Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getGpsLon(), azimuthDegreesReportedByMount, mount.getDecDegrees());
             LOGGER.debug("RA {}", position.getRaHours());
-            mount.setRaHours(position.getRaHours());
+            if (abs(position.getRaHours() - mount.getRaHours()) > 3) {
+                LOGGER.warn("Disregarding update from serial message as it is too far from last recorded position. You may need to SYNC the mount to a coordinate.");
+            } else {
+                mount.setRaHours(position.getRaHours());
+            }
         } else {
             throw new UnsupportedOperationException("Currently only EQ_NORTH is supported.");
         }
