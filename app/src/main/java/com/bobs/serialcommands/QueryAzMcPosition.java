@@ -47,7 +47,7 @@ public class QueryAzMcPosition extends MountCommand {
         LOGGER.debug("ALTAZ raw data = {}", azimuthDegreesReportedByMount);
         if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
             //FIXME: NPE when gps lat lon are null
-            Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getGpsLon(), azimuthDegreesReportedByMount, mount.getDecDegrees());
+            Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getLongitude(), azimuthDegreesReportedByMount, mount.getDecDegrees());
             LOGGER.debug("RA {}", position.getRaHours());
             if (abs(position.getRaHours() - mount.getRaHours()) > 3) {
                 LOGGER.warn("Disregarding update from serial message as it is too far from last recorded position. You may need to SYNC the mount to a coordinate.");

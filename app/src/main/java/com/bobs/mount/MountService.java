@@ -58,7 +58,7 @@ public class MountService {
         if (mount.getTrackingMode().equals(TrackingMode.EQ_NORTH)) {
             double azimuthAxisDegrees = altAz.convertRaFromDegToNexstarTicks(
                     Calendar.getInstance(),
-                    mount.getGpsLon(),
+                    mount.getLongitude(),
                     altAz.convertRaHoursToDeg(target.getRaHours()));
             double altitudeAxisDegrees = altAz.convertDecToPositionAngleForEqNorth(target.getDec());
             auxAdapter.queueCommand(new SetAltMcPosition(mount, altitudeAxisDegrees));
@@ -81,6 +81,7 @@ public class MountService {
     @Async
     public void slew(Target target, boolean parkSlew) {
         if (!mount.isAligned()) {
+            mount.setStatusMessage("Error: Please sync mount before slewing");
             throw new IllegalStateException("Please sync/align the mount before slewing");
         }
         LOGGER.info("Slewing to RA:{} DEC:{}", target.getRaHours(), target.getDec());
@@ -118,7 +119,7 @@ public class MountService {
         AltAz altAz = new AltAz();
         double azimuthAxisDegrees = altAz.convertRaFromDegToNexstarTicks(
                 Calendar.getInstance(),
-                mount.getGpsLon(),
+                mount.getLongitude(),
                 altAz.convertRaHoursToDeg(target.getRaHours()));
         double altitudeAxisDegrees = target.getDec();
         LOGGER.debug("starting slew");
@@ -170,6 +171,7 @@ public class MountService {
     @Async
     public Target park(Target target) {
         if (!mount.isAligned()) {
+            mount.setStatusMessage("Error: Please sync mount before slewing");
             throw new IllegalStateException("Please sync/align the mount before moving");
         }
         LOGGER.warn("PARKING MOUNT");
@@ -237,26 +239,21 @@ public class MountService {
         if (mount.getTrackingState() == TrackingState.TRACKING) {
             startTracking();
         }
-        //FIXME: remove next 3 lines, just for POC testing. Need to query the GPS module instead or get from INDI driver.
-        mount.setGpsLat(52.25288940983352);
-        mount.setGpsLon(351.639317967851);
-        mount.setLocationSet(true);
         return true;
     }
 
     /**
-     * Perform a query to the mount to determine current position if connected
+     * Perform a query to the mount to determine current position if connected.
      */
     @Scheduled(fixedDelay = 20000)
     public void queryMountState() {
+        mount.setStatusMessage(null);
         if (auxAdapter.isConnected() && mount.getTrackingMode() != null) {
             if (mount.isLocationSet()) {
                 LOGGER.debug("Sending serial queueCommand to query az state");
                 auxAdapter.queueCommand(new QueryAzMcPosition(mount));
                 LOGGER.debug("Sending serial queueCommand to query alt state");
                 auxAdapter.queueCommand(new QueryAltMcPosition(mount));
-            } else {
-                //FIXME: do this on connect waitForGps();
             }
         }
     }
@@ -376,28 +373,33 @@ public class MountService {
     }
 
     /**
-     * Update the mount. Only 5 properties are updateable. SerialPort, Guiderate, SlewLimits(x2) and Pec status
+     * Update the mount. Only 6 properties are updateable. SerialPort, Guiderate, SlewLimits(x2) lat/lon and Pec status
      *
-     * @param newMount
+     * @param mountUpdates
      * @return
      */
     @Async
-    public void updateMount(Mount newMount) {
-        if (newMount.getSerialPort() != null && newMount.getSerialPort() != mount.getSerialPort()) {
-            mount.setSerialPort(newMount.getSerialPort());
+    public void updateMount(Mount mountUpdates) {
+        if (mountUpdates.getSerialPort() != null && mountUpdates.getSerialPort() != mount.getSerialPort()) {
+            mount.setSerialPort(mountUpdates.getSerialPort());
         }
-        if (newMount.getGuideRate() != null && newMount.getGuideRate() != mount.getGuideRate()) {
-            mount.setGuideRate(newMount.getGuideRate());
+        if (mountUpdates.getGuideRate() != null && mountUpdates.getGuideRate() != mount.getGuideRate()) {
+            mount.setGuideRate(mountUpdates.getGuideRate());
             startTracking();
         }
-        if (newMount.getSlewLimitAlt() != null && newMount.getSlewLimitAlt() != mount.getSlewLimitAlt()) {
-            mount.setSlewLimitAlt(newMount.getSlewLimitAlt());
+        if (mountUpdates.getSlewLimitAlt() != null && mountUpdates.getSlewLimitAlt() != mount.getSlewLimitAlt()) {
+            mount.setSlewLimitAlt(mountUpdates.getSlewLimitAlt());
         }
-        if (newMount.getSlewLimitAz() != null && newMount.getSlewLimitAz() != mount.getSlewLimitAz()) {
-            mount.setSlewLimitAz(newMount.getSlewLimitAz());
+        if (mountUpdates.getSlewLimitAz() != null && mountUpdates.getSlewLimitAz() != mount.getSlewLimitAz()) {
+            mount.setSlewLimitAz(mountUpdates.getSlewLimitAz());
         }
-        if (newMount.getPecMode() != null && newMount.getPecMode() != mount.getPecMode()) {
-            startPecOperation(newMount.getPecMode());
+        if (mountUpdates.getPecMode() != null && mountUpdates.getPecMode() != mount.getPecMode()) {
+            startPecOperation(mountUpdates.getPecMode());
+        }
+        if (mountUpdates.getLatitude() != null || mountUpdates.getLongitude() != null) {
+            mount.setLongitude(mountUpdates.getLongitude());
+            mount.setLatitude(mountUpdates.getLatitude());
+            mount.setLocationSet(true);
         }
     }
 

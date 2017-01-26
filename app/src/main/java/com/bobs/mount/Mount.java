@@ -29,8 +29,8 @@ public class Mount {
     private Double raHours = 0.0;
     private Double decDegrees = 90.0;
     private TrackingMode trackingMode;
-    private Double gpsLat;
-    private Double gpsLon;
+    private Double latitude;
+    private Double longitude;
     private boolean gpsConnected;
     private String gpsReceiverStatus;
     private Double slewLimitAlt;
@@ -46,6 +46,7 @@ public class Mount {
     private String error;
     private GuideRate guideRate;
     private double cordWrapPosition;
+    private String statusMessage;
 
 
     /**
@@ -66,8 +67,8 @@ public class Mount {
         ObjectMapper om = new ObjectMapper();
         try {
             Mount persisted = om.readValue(json, Mount.class);
-            this.gpsLat = persisted.getGpsLat();
-            this.gpsLon = persisted.getGpsLon();
+            this.latitude = persisted.getLatitude();
+            this.longitude = persisted.getLongitude();
             this.locationSet = persisted.isLocationSet();
             this.serialPort = persisted.getSerialPort();
             this.trackingState = persisted.getTrackingState();
@@ -136,20 +137,20 @@ public class Mount {
         this.trackingMode = trackingMode;
     }
 
-    public Double getGpsLat() {
-        return gpsLat;
+    public Double getLatitude() {
+        return latitude;
     }
 
-    public void setGpsLat(Double gpsLat) {
-        this.gpsLat = gpsLat;
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
     }
 
-    public Double getGpsLon() {
-        return gpsLon;
+    public Double getLongitude() {
+        return longitude;
     }
 
-    public void setGpsLon(Double gpsLon) {
-        this.gpsLon = gpsLon;
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 
     public boolean isGpsConnected() {
@@ -278,5 +279,13 @@ public class Mount {
 
     public void setCordWrapPosition(double cordWrapPosition) {
         this.cordWrapPosition = cordWrapPosition;
+    }
+
+    public String getStatusMessage() {
+        return statusMessage;
+    }
+
+    public void setStatusMessage(String statusMessage) {
+        this.statusMessage = statusMessage;
     }
 }

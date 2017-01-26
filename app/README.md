@@ -7,7 +7,6 @@ The primary comsumer of this API is the INDI driver although a very basic javasc
 ### TODO: 
 .  Slew limits
 .  Scheduled async GPS update of position
-.  INDI driver update of position on connect
 .  GOTO and SYNC added to HTML app
 .  Implement ALTAZ and EQ-SOUTH tracking. Currently only EQ-NORTH is supported
 

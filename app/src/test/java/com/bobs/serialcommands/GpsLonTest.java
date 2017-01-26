@@ -28,7 +28,7 @@ public class GpsLonTest extends BaseCommandTest {
     @Test
     public void handleMessage() throws Exception {
         sut.handleMessage(new byte[]{0x01, 0x23, 0x03});
-        assertEquals(1.5, mount.getGpsLon(), 0.1);
+        assertEquals(1.5, mount.getLongitude(), 0.1);
     }
 
 }

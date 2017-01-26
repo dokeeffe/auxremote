@@ -34,7 +34,7 @@ public class QueryAzMcPositionTest extends BaseCommandTest {
         //arrange
         AltAz altAz = new AltAz();
         double azPos = 2.42143406995738; //01B8CF
-        Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getGpsLon(), azPos, mount.getDecDegrees());
+        Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getLongitude(), azPos, mount.getDecDegrees());
         mount.setRaHours(position.getRaHours() - 0.1);
         byte[] message = new byte[3];
         message[0] = (byte) 0x01;
@@ -57,7 +57,7 @@ public class QueryAzMcPositionTest extends BaseCommandTest {
         //arrange
         AltAz altAz = new AltAz();
         double azPos = 2.42143406995738; //01B8CF
-        Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getGpsLon(), azPos, mount.getDecDegrees());
+        Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getLongitude(), azPos, mount.getDecDegrees());
         mount.setRaHours(position.getRaHours());
         byte[] message = new byte[3];
         message[0] = (byte) 0x88;

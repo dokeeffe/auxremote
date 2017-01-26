@@ -38,6 +38,6 @@ public class GpsLat extends MountCommand {
         String hex = DatatypeConverter.printHexBinary(message);
         double gpsLat = bytesToDegrees(hex);
         LOGGER.info("GPS reports lat {}", gpsLat);
-        mount.setGpsLat(gpsLat);
+        mount.setLatitude(gpsLat);
     }
 }

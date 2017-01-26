@@ -18,6 +18,6 @@ public class BaseCommandTest {
 
     public void setup() {
         mount.setTrackingMode(TrackingMode.EQ_NORTH);
-        mount.setGpsLon(351.6391);
+        mount.setLongitude(351.6391);
     }
 }

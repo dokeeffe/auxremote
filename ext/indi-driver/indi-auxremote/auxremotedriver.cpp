@@ -153,15 +153,28 @@ bool AuxRemote::updateProperties() {
 }
 
 bool AuxRemote::ISNewNumber (const char *dev, const char *name, double values[], char *names[], int n) {
-    DEBUGF(INDI::Logger::DBG_DEBUG, "**ISNewNumber %s", name);
-    if(strcmp(dev,getDeviceName())==0)
-    {
-        if (!strcmp(name,GuideNSNP.name) || !strcmp(name,GuideWENP.name))
-        {
+    if(strcmp(dev,getDeviceName())==0) {
+        if (!strcmp(name,GuideNSNP.name) || !strcmp(name,GuideWENP.name)) {
             processGuiderProperties(name, values, names, n);
             return true;
-        }
-    }
+        } else if(strcmp(name,"GEOGRAPHIC_COORD")==0) {
+            DEBUGF(INDI::Logger::DBG_DEBUG, "**ISNewNumber %s", name);
+            int latindex = IUFindIndex("LAT", names, n);
+            int longindex= IUFindIndex("LONG", names, n);
+            if (latindex == -1 || longindex==-1) {
+                DEBUG(INDI::Logger::DBG_ERROR, "Bad location data");
+            } else {
+              double targetLat  = values[latindex];
+              double targetLong = values[longindex];
+              //post location to auxremote service
+              char _json[60];
+              snprintf(_json, 60, "{\"latitude\":%f,\"longitude\":%f}", targetLat, targetLong);
+              DEBUGF(INDI::Logger::DBG_DEBUG, "updating loc %s", _json);
+              SendPostRequest(_json,"/mount");
+            }
+         }
+
+      }
 
     return INDI::Telescope::ISNewNumber(dev, name, values, names, n);
 }

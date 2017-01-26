@@ -32,8 +32,8 @@ public class MountServiceTest {
         ReflectionTestUtils.setField(mountService, "auxAdapter", fakeAuxAdapter);
         mount.setTrackingState(TrackingState.TRACKING);
         mount.setTrackingMode(TrackingMode.EQ_NORTH);
-        mount.setGpsLat(52.2);
-        mount.setGpsLon(351.6);
+        mount.setLatitude(52.2);
+        mount.setLongitude(351.6);
         mount.setLocationSet(true);
         mountService.setGpsPollInterval(10); //to speedup test
         mountService.setPecPollInterval(10); //to speedup test
@@ -537,6 +537,16 @@ public class MountServiceTest {
         updated.setPecMode(PecMode.PLAYING);
         mountService.updateMount(updated);
         assertEquals(PecMode.PLAYING, mount.getPecMode());
+    }
+
+    @Test
+    public void updateMount_setLocation() throws Exception {
+        Mount updated = new Mount();
+        updated.setLatitude(52.20);
+        updated.setLongitude(-8.00);
+        mountService.updateMount(updated);
+        assertEquals(52.2, mount.getLatitude(), 0);
+        assertEquals(-8.00, mount.getLongitude(), 0);
     }
 
     @Test

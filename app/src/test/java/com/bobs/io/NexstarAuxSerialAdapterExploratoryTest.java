@@ -31,8 +31,8 @@ public class NexstarAuxSerialAdapterExploratoryTest {
     public void setup() {
         sut.setSerialPortBuilder(new SerialPortBuilder());
         mount.setTrackingMode(TrackingMode.EQ_NORTH);
-        mount.setGpsLat(52.0);
-        mount.setGpsLon(357.0);
+        mount.setLatitude(52.0);
+        mount.setLongitude(357.0);
         sut.setSerialPortName("/dev/celestron");
         new Thread(sut).start();
 
@@ -88,8 +88,8 @@ public class NexstarAuxSerialAdapterExploratoryTest {
             sut.queueCommand(new GpsRecieverStatus(mount));
             Thread.sleep(10000);
             System.out.println("GPS:" + mount.isGpsConnected());
-            System.out.println("LAT:" + mount.getGpsLat());
-            System.out.println("LON:" + mount.getGpsLon());
+            System.out.println("LAT:" + mount.getLatitude());
+            System.out.println("LON:" + mount.getLongitude());
         }
 
     }
