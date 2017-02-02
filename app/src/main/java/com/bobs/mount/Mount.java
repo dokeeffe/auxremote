@@ -1,5 +1,6 @@
 package com.bobs.mount;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -303,6 +304,7 @@ public class Mount {
     /**
      * Returns true if the GPS info is more than 1 hour old
      */
+    @JsonIgnore
     public boolean isGpsInfoOld() {
         return this.gpsUpdateTime == null || new Date().getTime() - this.getGpsUpdateTime().getTime() > ONE_HOUR;
     }

@@ -19,7 +19,6 @@ public class Goto extends MountCommand {
     private final Double position;
     private final Axis axis;
     private final boolean fast;
-    private boolean parkingSlew = false;
 
     /**
      * Constructor
@@ -34,22 +33,6 @@ public class Goto extends MountCommand {
         this.position = position;
         this.axis = axis;
         this.fast = fast;
-    }
-
-    /**
-     * Constructor
-     *
-     * @param mount
-     * @param position
-     * @param axis
-     * @param fast
-     */
-    public Goto(Mount mount, Double position, Axis axis, boolean fast, boolean parkingSlew) {
-        super(mount);
-        this.position = position;
-        this.axis = axis;
-        this.fast = fast;
-        this.parkingSlew = parkingSlew;
     }
 
     @Override
@@ -80,11 +63,7 @@ public class Goto extends MountCommand {
         if (message[0] != ACK) {
             LOGGER.error("Expected ACK, but got {}", DatatypeConverter.printHexBinary(message));
         } else {
-            if (parkingSlew) {
-                mount.setTrackingState(TrackingState.PARKING);
-            } else {
-                mount.setTrackingState(TrackingState.SLEWING);
-            }
+            mount.setTrackingState(TrackingState.SLEWING);
         }
     }
 

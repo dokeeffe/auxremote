@@ -31,7 +31,7 @@ public class SerialPortBuilder {
             LOGGER.info("Serial port opened");
         } catch (SerialPortException ex) {
             LOGGER.error("failure connecting to / opening port", ex);
-            //TODO: Throw an exception here and update the indi driver (client) to get notified on connection failure
+            throw new RuntimeException("Failure to connect to serial port", ex);
         }
         return serialPort;
     }
