@@ -10,6 +10,7 @@ import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * Basic bean responsible for storing the state of the actual physical mount.
@@ -24,6 +25,7 @@ public class Mount {
 
     public static final String AUXREMOTE_MOUNT_JSON = "auxremote-mount.json";
     private static final Logger LOGGER = LoggerFactory.getLogger(Mount.class);
+    private static final long ONE_HOUR = 1000 * 60 * 60;
     private String version;
     private TrackingState trackingState;
     private Double raHours = 0.0;
@@ -32,6 +34,7 @@ public class Mount {
     private Double latitude;
     private Double longitude;
     private boolean gpsConnected;
+    private Date gpsUpdateTime;
     private String gpsReceiverStatus;
     private Double slewLimitAlt;
     private Double slewLimitAz;
@@ -161,6 +164,14 @@ public class Mount {
         this.gpsConnected = gpsConnected;
     }
 
+    public Date getGpsUpdateTime() {
+        return gpsUpdateTime;
+    }
+
+    public void setGpsUpdateTime(Date gpsUpdateTime) {
+        this.gpsUpdateTime = gpsUpdateTime;
+    }
+
     public String getGpsReceiverStatus() {
         return gpsReceiverStatus;
     }
@@ -287,5 +298,12 @@ public class Mount {
 
     public void setStatusMessage(String statusMessage) {
         this.statusMessage = statusMessage;
+    }
+
+    /**
+     * Returns true if the GPS info is more than 1 hour old
+     */
+    public boolean isGpsInfoOld() {
+        return this.gpsUpdateTime == null || new Date().getTime() - this.getGpsUpdateTime().getTime() > ONE_HOUR;
     }
 }

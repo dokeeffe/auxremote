@@ -2,6 +2,7 @@ package com.bobs.mount;
 
 import com.bobs.coord.Target;
 import com.bobs.serialcommands.*;
+import org.apache.commons.lang.time.DateUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -9,6 +10,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.xml.bind.DatatypeConverter;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -139,7 +141,7 @@ public class MountServiceTest {
     }
 
     @Test
-    public void unpark() throws Exception {
+    public void unpark_then_guideRateSetPositionAndGpsQueried() throws Exception {
         mount.setAligned(false);
         mount.setTrackingState(TrackingState.PARKED);
         Target target = new Target();
@@ -156,9 +158,12 @@ public class MountServiceTest {
         assertEquals(SetAzMcPosition.class, queuedCommands.get(4).getClass());
         assertEquals(QueryAzMcPosition.class, queuedCommands.get(5).getClass());
         assertEquals(QueryAltMcPosition.class, queuedCommands.get(6).getClass());
+        assertEquals(GpsLinked.class, queuedCommands.get(7).getClass());
+        assertEquals(GpsLat.class, queuedCommands.get(8).getClass());
+        assertEquals(GpsLon.class, queuedCommands.get(9).getClass());
         assertTrue(mount.isAligned());
         assertEquals(TrackingState.TRACKING, mount.getTrackingState());
-        assertEquals(7, queuedCommands.size());
+        assertEquals(10, queuedCommands.size());
     }
 
     @Test
@@ -206,13 +211,28 @@ public class MountServiceTest {
     }
 
     @Test
-    public void queryMountState() throws Exception {
+    public void queryMountState_when_gpsInfoUptoDate_then_onlyPositionIsQueried() throws Exception {
+        mount.setGpsUpdateTime(new Date());
         mountService.queryMountState();
 
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
         assertEquals(QueryAzMcPosition.class, queuedCommands.get(0).getClass());
         assertEquals(QueryAltMcPosition.class, queuedCommands.get(1).getClass());
         assertEquals(2, queuedCommands.size());
+    }
+
+    @Test
+    public void queryMountState_when_gpsInfoStale_then_gpsAndPositionIsQueried() throws Exception {
+        mount.setGpsUpdateTime(DateUtils.addHours(new Date(), -2));
+        mountService.queryMountState();
+
+        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+        assertEquals(QueryAzMcPosition.class, queuedCommands.get(0).getClass());
+        assertEquals(QueryAltMcPosition.class, queuedCommands.get(1).getClass());
+        assertEquals(GpsLinked.class, queuedCommands.get(2).getClass());
+        assertEquals(GpsLat.class, queuedCommands.get(3).getClass());
+        assertEquals(GpsLon.class, queuedCommands.get(4).getClass());
+        assertEquals(5, queuedCommands.size());
     }
 
     @Test
@@ -462,6 +482,7 @@ public class MountServiceTest {
 
     @Test
     public void moveAxis_abort() throws Exception {
+        mount.setGpsUpdateTime(new Date());
         Target target = new Target();
         target.setMotion("abort");
         target.setMotionRate(1);

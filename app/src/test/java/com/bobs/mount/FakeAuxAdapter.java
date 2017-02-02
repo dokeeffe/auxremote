@@ -45,6 +45,14 @@ public class FakeAuxAdapter implements NexstarAuxAdapter {
         if (command instanceof GpsLinked) {
             mount.setGpsConnected(true);
         }
+        if (command instanceof Move) {
+            Move moveCmd = (Move) command;
+            if (moveCmd.getCommand()[4] == 0) {
+                mount.setTrackingState(TrackingState.TRACKING);
+            } else {
+                mount.setTrackingState(TrackingState.SLEWING);
+            }
+        }
     }
 
     @Override

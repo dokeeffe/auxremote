@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
+import java.util.Date;
 
 import static com.bobs.coord.AltAz.ONE_DEG_IN_HOURS;
 
@@ -145,7 +146,16 @@ public class MountService {
      * If limit detected then send serial commands to abort any motion
      */
     private void enforceAltSlewLimit() {
-        //TOOD:
+        if (mount.getSlewLimitAlt() != null) {
+            if (mount.getDecDegrees() + (90 - mount.getLatitude()) < mount.getSlewLimitAlt()) {
+                mount.setStatusMessage("slew limit reached");
+                auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, true));
+                auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, true));
+                mount.setAltSlewInProgress(false);
+                mount.setAzSlewInProgress(false);
+                throw new RuntimeException("Slew Limit Reached");
+            }
+        }
     }
 
     /**
@@ -248,40 +258,33 @@ public class MountService {
     @Scheduled(fixedDelay = 20000)
     public void queryMountState() {
         mount.setStatusMessage(null);
-        if (auxAdapter.isConnected() && mount.getTrackingMode() != null) {
-            if (mount.isLocationSet()) {
+        if (auxAdapter.isConnected()) {
+            if (mount.isLocationSet() && mount.getTrackingMode() != null) {
                 LOGGER.debug("Sending serial queueCommand to query az state");
                 auxAdapter.queueCommand(new QueryAzMcPosition(mount));
                 LOGGER.debug("Sending serial queueCommand to query alt state");
                 auxAdapter.queueCommand(new QueryAltMcPosition(mount));
             }
+            if (mount.isGpsInfoOld() && mount.getTrackingState() != TrackingState.SLEWING) {
+                queryGps();
+            }
         }
     }
 
     /**
-     * Block and wait until GPS is connected. Then get the LAT LON and store in the {@link Mount}
+     * Query the GPS module and update the mount
      */
-    private void waitForGps() {
-        int attempts = 0;
-        mount.setLocationSet(false);
-        boolean maxAttemptsReached = false;
-        while (!mount.isLocationSet() && !maxAttemptsReached) {
-            LOGGER.info("GPS locating satellites");
-            auxAdapter.queueCommand(new GpsLinked(mount));
-            sleep(1000);
-            if (!mount.isGpsConnected()) {
-                sleep(gpsPollInterval);
-            } else {
-                LOGGER.info("GPS connected");
-                auxAdapter.queueCommand(new GpsLat(mount));
-                auxAdapter.queueCommand(new GpsLon(mount));
-                mount.setLocationSet(true);
-            }
-            if (attempts++ > 10) {
-                //FIXME: This is serious and can cause damage. Need to stop all operations if lat & lon are null
-                LOGGER.warn("Not waiting any longer for a GPS link. Set LAT and LON manually through the API");
-                maxAttemptsReached = true;
-            }
+    private void queryGps() {
+        LOGGER.info("GPS locating satellites");
+        auxAdapter.queueCommand(new GpsLinked(mount));
+        auxAdapter.waitForQueueEmpty();
+        if (mount.isGpsConnected()) {
+            LOGGER.info("GPS connected");
+            auxAdapter.queueCommand(new GpsLat(mount));
+            auxAdapter.queueCommand(new GpsLon(mount));
+            mount.setLocationSet(true);
+            mount.setGpsUpdateTime(new Date());
+            LOGGER.info("GPS location updated");
         }
     }
 
