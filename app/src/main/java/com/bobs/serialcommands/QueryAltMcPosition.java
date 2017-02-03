@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
 
-import static java.lang.Math.abs;
-
 /**
  * Created by dokeeffe on 25/12/16.
  */
@@ -46,11 +44,11 @@ public class QueryAltMcPosition extends MountCommand {
         if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
             double dec = altAz.convertPositionAngleToDecForEqNorth(positionAngle);
             LOGGER.debug("DEC {}", dec);
-            if (abs(dec - mount.getDecDegrees()) > BAD_DATA_THRESHOLD) {
-                LOGGER.warn("Disregarding bad update from serial message as it is too far from last recorded position. You may need to SYNC the mount to a coordinate.");
-            } else {
+//            if (abs(dec - mount.getDecDegrees()) > BAD_DATA_THRESHOLD) {
+//                LOGGER.warn("Disregarding bad update from serial message as it is too far from last recorded position. You may need to SYNC the mount to a coordinate.");
+//            } else {
                 mount.setDecDegrees(dec);
-            }
+//            }
         } else {
             throw new UnsupportedOperationException("Currently only EQ_NORTH is supported.");
         }
