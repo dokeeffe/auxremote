@@ -23,7 +23,7 @@
 std::unique_ptr<AuxRemote> aux_remote(new AuxRemote());
 
 /**
- * Callback for curl lib to write response to
+* Callback for curl lib to write response to
 **/
 static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
     ((std::string*)userp)->append((char*)contents, size * nmemb);
@@ -321,7 +321,7 @@ bool AuxRemote::ReadScopeStatus() {
               PecT[0].text = pecState;
               IDSetText(&PecTP,NULL);
             }
-            if (!strcmp(it->key, "trackingState")) {
+            if (!strcmp(it->key, "trackingState") && !isParked()) {
               char *ts = it->value.toString();
               //DEBUGF(INDI::Logger::DBG_DEBUG, "TrackingState= %s", ts);
               if(strcmp(ts,"IDLE")==0) {
