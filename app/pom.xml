@@ -8,9 +8,9 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>nexmod</name>
+    <name>auxremote</name>
     <description>AUX command based controller for Nexstar Celestron mounts. Connects to the mount via serial cable
-        through the handset
+        through the handset. Exposes a HTTP api of higher level operations, sync,slew,guide, park and unpark. Enables 100% remote operation of a celestron mount. No more star align needed.
     </description>
 
     <parent>
