@@ -37,17 +37,6 @@ public class QueryAltMcPositionTest extends BaseCommandTest {
         assertEquals(-79.8, mount.getDecDegrees(), 0.1);
     }
 
-    @Test
-    public void handleMessage_badData() {
-        mount.setDecDegrees(1.1);
-        byte[] message = new byte[4];
-        message[0] = (byte) 0x01;
-        message[1] = (byte) 0xB8;
-        message[2] = (byte) 0xCF;
-        sut.handleMessage(message);
-        assertEquals(1.1, mount.getDecDegrees(), 0.1);
-    }
-
     @Test(expected = UnsupportedOperationException.class)
     public void handleMessage_eqSouthMode() {
         mount.setTrackingMode(TrackingMode.EQ_SOUTH);

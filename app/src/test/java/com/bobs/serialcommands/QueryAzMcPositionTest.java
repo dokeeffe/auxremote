@@ -48,29 +48,6 @@ public class QueryAzMcPositionTest extends BaseCommandTest {
         assertEquals(position.getRaHours(), mount.getRaHours(), 0.00001);
     }
 
-    /**
-     * Test for the intermittant case where erronious data comes back from the mount.
-     * This incorrect position data should be ignored.
-     */
-    @Test
-    public void handleMessage_badUpdateFromMount() {
-        //arrange
-        AltAz altAz = new AltAz();
-        double azPos = 2.42143406995738; //01B8CF
-        Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getLongitude(), azPos, mount.getDecDegrees());
-        mount.setRaHours(position.getRaHours());
-        byte[] message = new byte[3];
-        message[0] = (byte) 0x88;
-        message[1] = (byte) 0x88;
-        message[2] = (byte) 0x88;
-
-        //act
-        sut.handleMessage(message);
-
-        //assert
-        assertEquals(position.getRaHours(), mount.getRaHours(), 0.000001);
-    }
-
     @Test(expected = UnsupportedOperationException.class)
     public void handleMessage_eqSouthMode() {
         mount.setTrackingMode(TrackingMode.EQ_SOUTH);
