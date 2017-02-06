@@ -25,7 +25,6 @@ import static com.bobs.coord.AltAz.ONE_DEG_IN_HOURS;
 public class MountService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MountService.class);
-    private static final int DEFAULT_GPS_POLL_INTERVAL = 10000;
     private static final int DEFAULT_PEC_POLL_INTERVAL = 5000;
 
     /**
@@ -37,7 +36,6 @@ public class MountService {
     @Autowired
     private NexstarAuxAdapter auxAdapter;
 
-    private int gpsPollInterval = DEFAULT_GPS_POLL_INTERVAL;
     private int pecPollInterval = DEFAULT_PEC_POLL_INTERVAL;
 
     /**
@@ -119,7 +117,7 @@ public class MountService {
         mount.setAzSlewInProgress(true);
         AltAz altAz = new AltAz();
         double azimuthAxisDegrees = altAz.convertRaFromDegToNexstarTicks(
-                Calendar.getInstance(),
+                mount.getCalendarProvider().currentCalendar(),
                 mount.getLongitude(),
                 altAz.convertRaHoursToDeg(target.getRaHours()));
         double altitudeAxisDegrees = target.getDec();
@@ -442,14 +440,6 @@ public class MountService {
                 auxAdapter.queueCommand(new PecPlayback(mount, false));
                 break;
         }
-    }
-
-    /**
-     * Set the polling interval for GPS query messages
-     * @param gpsPollInterval
-     */
-    public void setGpsPollInterval(int gpsPollInterval) {
-        this.gpsPollInterval = gpsPollInterval;
     }
 
     public void setPecPollInterval(int pecPollInterval) {

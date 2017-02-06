@@ -7,6 +7,7 @@ import jssc.SerialPortException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.bobs.serialcommands.MountCommand.ALT_BOARD;
 import static com.bobs.serialcommands.MountCommand.AZM_BOARD;
 
 /**
@@ -18,6 +19,8 @@ public class FakeAuxAdapter implements NexstarAuxAdapter {
     private String serialPortName;
     private Mount mount;
     private boolean connected = true;
+    private byte[] azBoardPosition = new byte[3];
+    private byte[] altBoardPosition = new byte[3];
 
     public void setMount(Mount mount) {
         this.mount = mount;
@@ -35,6 +38,25 @@ public class FakeAuxAdapter implements NexstarAuxAdapter {
         }
         if (command instanceof PecQueryAtIndex) {
             mount.setPecIndexFound(true);
+        }
+        if (command instanceof Goto) {
+            byte[] gotoCmd = command.getCommand();
+            if (gotoCmd[2] == ALT_BOARD) {
+                altBoardPosition[0] = gotoCmd[4];
+                altBoardPosition[1] = gotoCmd[5];
+                altBoardPosition[2] = gotoCmd[6];
+            }
+            if (gotoCmd[2] == AZM_BOARD) {
+                azBoardPosition[0] = gotoCmd[4];
+                azBoardPosition[1] = gotoCmd[5];
+                azBoardPosition[2] = gotoCmd[6];
+            }
+        }
+        if (command instanceof QueryAltMcPosition) {
+            command.handleMessage(altBoardPosition);
+        }
+        if (command instanceof QueryAzMcPosition) {
+            command.handleMessage(azBoardPosition);
         }
         if (command instanceof PecQueryRecordDone) {
             mount.setPecMode(PecMode.IDLE);

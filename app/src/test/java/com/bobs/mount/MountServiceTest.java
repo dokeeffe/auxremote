@@ -4,16 +4,19 @@ import com.bobs.coord.Target;
 import com.bobs.serialcommands.*;
 import org.apache.commons.lang.time.DateUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.xml.bind.DatatypeConverter;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by dokeeffe on 31/12/16.
@@ -28,6 +31,7 @@ public class MountServiceTest {
     public void setUp() throws Exception {
         mountService = new MountService();
         fakeAuxAdapter = new FakeAuxAdapter();
+        CalendarProvider calendarProvider = new CalendarProvider();
         mount = new Mount();
         fakeAuxAdapter.setMount(mount);
         ReflectionTestUtils.setField(mountService, "mount", mount);
@@ -37,8 +41,8 @@ public class MountServiceTest {
         mount.setLatitude(52.2);
         mount.setLongitude(351.6);
         mount.setLocationSet(true);
-        mountService.setGpsPollInterval(10); //to speedup test
         mountService.setPecPollInterval(10); //to speedup test
+        mount.setCalendarProvider(calendarProvider);
     }
 
     @Test
@@ -68,6 +72,29 @@ public class MountServiceTest {
         mount.setAligned(false);
         Target target = new Target();
         mountService.slew(target, false);
+    }
+
+    @Test
+    public void slew_crashInvestigation() throws Exception {
+        mount.setAligned(true);
+        Target target = new Target();
+        target.setRaHours(4.696695);
+        target.setDec(-38.100300);
+        CalendarProvider mockCalendarProvider = mock(CalendarProvider.class);
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.set(Calendar.YEAR, 2017);
+        cal.set(Calendar.MONTH, Calendar.FEBRUARY);
+        cal.set(Calendar.DAY_OF_MONTH, 5);
+        cal.set(Calendar.HOUR_OF_DAY, 20);
+        cal.set(Calendar.MINUTE, 12);
+        cal.set(Calendar.SECOND, 18);
+        when(mockCalendarProvider.currentCalendar()).thenReturn(cal);
+        mount.setCalendarProvider(mockCalendarProvider);
+
+        //act
+        mountService.slew(target, false);
+        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+        assertEquals(4.69, mount.getRaHours(), 0.1);
     }
 
     @Test
@@ -139,6 +166,22 @@ public class MountServiceTest {
         assertEquals(TrackingState.PARKED, mount.getTrackingState());
         assertEquals(12, queuedCommands.size());
     }
+
+
+    @Test
+    public void park_crash_test() throws Exception {
+        mount.setAligned(true);
+        mount.setLatitude(52.25338293632168);
+        mount.setLongitude(351.63942525621803);
+        Target target = new Target();
+        target.setRaHours(4.696695);
+        target.setDec(-38.100300);
+
+        mountService.park(target);
+
+        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+    }
+
 
     @Test
     public void unpark_then_guideRateSetPositionAndGpsQueried() throws Exception {
@@ -244,23 +287,6 @@ public class MountServiceTest {
 
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
         assertEquals(0, queuedCommands.size());
-    }
-
-    @Test
-    @Ignore //indor testing means a hack which breaks this test
-    public void connect_when_noLocationSet_then_gpsIsQueried() throws Exception {
-        mount.setLocationSet(false);
-        mountService.connect();
-
-        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(6, queuedCommands.size());
-        assertEquals(QueryCordWrapPos.class, queuedCommands.get(0).getClass());
-        assertEquals(EnableCordWrap.class, queuedCommands.get(1).getClass());
-        assertEquals(QueryCordWrap.class, queuedCommands.get(2).getClass());
-        assertEquals(GpsLinked.class, queuedCommands.get(3).getClass());
-        assertEquals(GpsLat.class, queuedCommands.get(4).getClass());
-        assertEquals(GpsLon.class, queuedCommands.get(5).getClass());
-        System.out.println(queuedCommands);
     }
 
     @Test

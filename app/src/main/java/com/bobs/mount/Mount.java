@@ -1,10 +1,10 @@
 package com.bobs.mount;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -25,7 +25,7 @@ import java.util.Date;
 @Component
 public class Mount {
 
-    public static final String AUXREMOTE_MOUNT_JSON = "auxremote-mount.json";
+    public static final String PERSISTANCE_STORE = "auxremote-mount.json";
     private static final Logger LOGGER = LoggerFactory.getLogger(Mount.class);
     private static final long ONE_HOUR = 1000 * 60 * 60;
     private String version;
@@ -53,6 +53,9 @@ public class Mount {
     private double cordWrapPosition;
     private String statusMessage;
 
+    @Autowired
+    private CalendarProvider calendarProvider;
+
 
     /**
      * On app startup, set defaults, and if possible load a previously persisted state.
@@ -60,7 +63,7 @@ public class Mount {
     @PostConstruct
     public void loadState() {
         setDefaults();
-        loadPersistedState(new File(System.getProperty("user.home"), AUXREMOTE_MOUNT_JSON));
+        loadPersistedState(new File(System.getProperty("user.home"), PERSISTANCE_STORE));
     }
 
     /**
@@ -103,7 +106,7 @@ public class Mount {
     public void saveState() {
         ObjectMapper om = new ObjectMapper();
         try {
-            om.writeValue(new FileOutputStream(new File(System.getProperty("user.home"), AUXREMOTE_MOUNT_JSON)), this);
+            om.writeValue(new FileOutputStream(new File(System.getProperty("user.home"), PERSISTANCE_STORE)), this);
         } catch (IOException e) {
             LOGGER.warn("error saving mount state", e);
         }
@@ -313,5 +316,14 @@ public class Mount {
     @JsonIgnore
     public boolean isSlewing() {
         return isAltSlewInProgress() || isAzSlewInProgress();
+    }
+
+    @JsonIgnore
+    public CalendarProvider getCalendarProvider() {
+        return calendarProvider;
+    }
+
+    public void setCalendarProvider(CalendarProvider calendarProvider) {
+        this.calendarProvider = calendarProvider;
     }
 }

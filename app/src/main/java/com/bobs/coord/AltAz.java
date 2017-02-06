@@ -14,11 +14,9 @@ import java.util.TimeZone;
  */
 public class AltAz {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AltAz.class);
-
     public static final double ONE_RA_HOUR_IN_DEGREES = 15.0;
     public static final double ONE_DEG_IN_HOURS = 24.0 / 360;
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(AltAz.class);
     private static final Calendar j2000;
 
     static {
@@ -44,7 +42,7 @@ public class AltAz {
      * @param mount
      */
     public void populateAltAzFromRaDec(Calendar cal, Target target, Mount mount) {
-        Target altAz = buildFromRaDec(cal, mount.getLatitude(), mount.getLongitude(), mount.getRaHours(), mount.getDecDegrees());
+        Target altAz = buildFromRaDec(cal, mount.getLatitude(), mount.getLongitude(), target.getRaHours(), target.getDec());
         target.setAlt(altAz.getAlt());
         target.setAz(altAz.getAz());
     }

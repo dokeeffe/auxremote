@@ -4,6 +4,7 @@ import com.bobs.serialcommands.*;
 import jssc.SerialPortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import java.util.concurrent.BlockingQueue;
@@ -15,7 +16,7 @@ import static com.bobs.serialcommands.MountCommand.*;
 /**
  * A simulator adapter for testing clients such as INDI
  */
-//@Component
+@Component
 public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
 
     /**

@@ -6,7 +6,7 @@ The primary comsumer of this API is the INDI driver although a very basic javasc
 
 ### TODO: 
 .  Slew limits
-.  Scheduled async GPS update of position
+.  Bug fix when used with ekos scheduler then slew never returns (possible driver problem)
 .  GOTO and SYNC added to HTML app
 .  Implement ALTAZ and EQ-SOUTH tracking. Currently only EQ-NORTH is supported
 

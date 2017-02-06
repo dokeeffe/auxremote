@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
-import java.util.Calendar;
 
 /**
  * Created by dokeeffe on 25/12/16.
@@ -44,8 +43,11 @@ public class QueryAzMcPosition extends MountCommand {
         double azimuthDegreesReportedByMount = bytesToDegrees(hex);
         LOGGER.debug("ALTAZ raw data = {}", azimuthDegreesReportedByMount);
         if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
-            //FIXME: NPE when gps lat lon are null
-            Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getLongitude(), azimuthDegreesReportedByMount, mount.getDecDegrees());
+            Target position = altAz.buildFromNexstarEqNorth(
+                    mount.getCalendarProvider().currentCalendar(),
+                    mount.getLongitude(),
+                    azimuthDegreesReportedByMount,
+                    mount.getDecDegrees());
             LOGGER.debug("RA {}", position.getRaHours());
             mount.setRaHours(position.getRaHours());
         } else {

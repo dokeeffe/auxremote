@@ -1,5 +1,6 @@
 package com.bobs.coord;
 
+import com.bobs.mount.Mount;
 import org.junit.Test;
 
 import java.util.Calendar;
@@ -46,8 +47,31 @@ public class AltAzTest {
     }
 
     @Test
-    public void testpopulateAltAzFromRaDec() {
-        fail("test me");
+    public void testpopulateAltAzFromRaDec_when_BelowHorizion_then_corectAltCalculated() {
+        //RA 19.187847689497158, DEC -38.42831125428148 These coords were reported during field testing when the mount crashed into the pier pointing straight down.
+        Mount mount = new Mount();
+        Target target = new Target();
+//        target.setRaHours(19.187847689497158);
+//        target.setDec(-38.42831125428148);
+//        {"raHours":4.696695 ,"dec":-38.100300
+        target.setRaHours(4.696695);
+        target.setDec(-38.100300);
+        mount.setLongitude(HOME_LON);
+        mount.setLatitude(HOME_LAT);
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.set(Calendar.YEAR, 2017);
+        cal.set(Calendar.MONTH, Calendar.FEBRUARY);
+        cal.set(Calendar.DAY_OF_MONTH, 5);
+        cal.set(Calendar.HOUR_OF_DAY, 20);
+        cal.set(Calendar.MINUTE, 12);
+        cal.set(Calendar.SECOND, 18);
+
+        sut.populateAltAzFromRaDec(cal, target, mount);
+
+        System.out.println("ALT " + target.getAlt());
+        System.out.println("AZ " + target.getAz());
+        fail();
+
     }
 
     @Test
@@ -131,13 +155,14 @@ public class AltAzTest {
     @Test
     public void testConvertToNexstarTicks() {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(Calendar.YEAR, 2016);
-        cal.set(Calendar.MONTH, Calendar.DECEMBER);
-        cal.set(Calendar.DAY_OF_MONTH, 27);
-        cal.set(Calendar.HOUR_OF_DAY, 16);
-        cal.set(Calendar.MINUTE, 12);
+        cal.set(Calendar.YEAR, 2017);
+        cal.set(Calendar.MONTH, Calendar.FEBRUARY);
+        cal.set(Calendar.DAY_OF_MONTH, 5);
+        cal.set(Calendar.HOUR_OF_DAY, 20);
+        cal.set(Calendar.MINUTE, 11);
+        cal.set(Calendar.SECOND, 04);
 
-        double ticks = sut.convertRaFromDegToNexstarTicks(cal, HOME_LON, 196.66813);
+        double ticks = sut.convertRaFromDegToNexstarTicks(cal, HOME_LON, 70.450425);
 
         System.out.println(ticks);
 //        assertEquals("8BDA57", result)
