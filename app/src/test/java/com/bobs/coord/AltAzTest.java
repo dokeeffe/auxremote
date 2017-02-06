@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Created by dokeeffe on 12/21/16.
@@ -42,6 +43,11 @@ public class AltAzTest {
         result = sut.buildFromRaDec(cal2, CORK_LAT, CORK_LON, DUBHE_RA, DUBHE_DEC);
         assertEquals(41.5, result.getAlt(), delta);
         assertEquals(39.0, result.getAz(), delta);
+    }
+
+    @Test
+    public void testpopulateAltAzFromRaDec() {
+        fail("test me");
     }
 
     @Test

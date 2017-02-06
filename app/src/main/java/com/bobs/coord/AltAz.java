@@ -1,5 +1,6 @@
 package com.bobs.coord;
 
+import com.bobs.mount.Mount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,10 +16,10 @@ public class AltAz {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AltAz.class);
 
-    public static final double ONE_RA_HOUR_IN_DEGREES = 15.0; //360.00 / 24.0
+    public static final double ONE_RA_HOUR_IN_DEGREES = 15.0;
     public static final double ONE_DEG_IN_HOURS = 24.0 / 360;
 
-    public static Calendar j2000;
+    private static final Calendar j2000;
 
     static {
         j2000 = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -35,6 +36,18 @@ public class AltAz {
         return utc;
     }
 
+
+    /**
+     * Populate the alt-az values for a given RA/DEC contained in the passed target for the passed mount's location
+     * @param cal
+     * @param target
+     * @param mount
+     */
+    public void populateAltAzFromRaDec(Calendar cal, Target target, Mount mount) {
+        Target altAz = buildFromRaDec(cal, mount.getLatitude(), mount.getLongitude(), mount.getRaHours(), mount.getDecDegrees());
+        target.setAlt(altAz.getAlt());
+        target.setAz(altAz.getAz());
+    }
 
     public Target buildFromRaDec(Calendar calendar, double lat, double lon, double ra, double dec) {
         Calendar utc = convertCalendarToUtcCalendar(calendar);

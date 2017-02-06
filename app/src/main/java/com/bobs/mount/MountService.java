@@ -126,7 +126,7 @@ public class MountService {
         LOGGER.debug("starting slew");
         auxAdapter.queueCommand(new Goto(mount, altitudeAxisDegrees, Axis.ALT, fast));
         auxAdapter.queueCommand(new Goto(mount, azimuthAxisDegrees, Axis.AZ, fast));
-        while (mount.isAzSlewInProgress() || mount.isAltSlewInProgress()) {
+        while (mount.isSlewing()) {
             LOGGER.debug("monitoring slew");
             if (mount.isAzSlewInProgress()) {
                 auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.AZ));
@@ -135,8 +135,8 @@ public class MountService {
             if (mount.isAltSlewInProgress()) {
                 auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.ALT));
                 sleep(500);
-                enforceAltSlewLimit();
             }
+            enforceAltSlewLimit();
         }
     }
 
@@ -258,7 +258,7 @@ public class MountService {
     @Scheduled(fixedDelay = 20000)
     public void queryMountState() {
         mount.setStatusMessage(null);
-        if (auxAdapter.isConnected()) {
+        if (auxAdapter.isConnected() && !mount.isSlewing()) {
             if (mount.isLocationSet() && mount.getTrackingMode() != null) {
                 LOGGER.debug("Sending serial queueCommand to query az state");
                 auxAdapter.queueCommand(new QueryAzMcPosition(mount));

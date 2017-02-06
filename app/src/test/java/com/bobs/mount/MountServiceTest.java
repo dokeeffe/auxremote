@@ -236,6 +236,17 @@ public class MountServiceTest {
     }
 
     @Test
+    public void queryMountState_when_mountSlewing_then_noQueriesMade() throws Exception {
+        mount.setGpsUpdateTime(DateUtils.addHours(new Date(), -2));
+        mount.setAltSlewInProgress(true);
+        mount.setAzSlewInProgress(true);
+        mountService.queryMountState();
+
+        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+        assertEquals(0, queuedCommands.size());
+    }
+
+    @Test
     @Ignore //indor testing means a hack which breaks this test
     public void connect_when_noLocationSet_then_gpsIsQueried() throws Exception {
         mount.setLocationSet(false);
