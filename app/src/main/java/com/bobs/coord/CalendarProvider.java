@@ -1,4 +1,4 @@
-package com.bobs.mount;
+package com.bobs.coord;
 
 import org.springframework.stereotype.Component;
 

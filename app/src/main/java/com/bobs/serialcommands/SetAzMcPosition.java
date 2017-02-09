@@ -11,10 +11,9 @@ import javax.xml.bind.DatatypeConverter;
  */
 public class SetAzMcPosition extends MountCommand {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SetAltMcPosition.class);
-
     public static final byte MESSAGE_LENGTH = 0x04;
     public static final byte RESPONSE_LENGTH = 0x01;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SetAltMcPosition.class);
     private final double position;
 
     public SetAzMcPosition(Mount mount, double position) {
@@ -41,6 +40,7 @@ public class SetAzMcPosition extends MountCommand {
     public void handleMessage(byte[] message) {
         if (message[0] != ACK) {
             LOGGER.error("Expected ACK, but got {}", DatatypeConverter.printHexBinary(message));
+            mount.setError("SYNC ERROR SetAzMcPosition");
         }
     }
 }

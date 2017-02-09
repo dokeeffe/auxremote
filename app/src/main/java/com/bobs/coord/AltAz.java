@@ -8,6 +8,9 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
+import static java.lang.Math.PI;
+import static java.lang.Math.asin;
+
 /**
  * Based on http://www.stargazing.net/kepler/altaz.html#twig02a
  * //FIXME: rename/refactor this sesspit
@@ -37,6 +40,7 @@ public class AltAz {
 
     /**
      * Populate the alt-az values for a given RA/DEC contained in the passed target for the passed mount's location
+     *
      * @param cal
      * @param target
      * @param mount
@@ -47,20 +51,31 @@ public class AltAz {
         target.setAz(altAz.getAz());
     }
 
+    /**
+     * Transform to ALT AZ
+     *
+     * @param calendar
+     * @param lat      latitude in degrees
+     * @param lon      longitude in degrees
+     * @param ra       right-ascention in hours. Example 4h30m00s = 4.5
+     * @param dec      declination in degrees
+     * @return a Target with alt az populated
+     */
     public Target buildFromRaDec(Calendar calendar, double lat, double lon, double ra, double dec) {
         Calendar utc = convertCalendarToUtcCalendar(calendar);
+        ra = convertRaHoursToDeg(ra);
         double lst = localSiderealTime(utc, lon);
         double hourAngle = ((lst - ra) + 360) % 360;
-        double x = Math.cos(hourAngle * (Math.PI / 180)) * Math.cos(dec * (Math.PI / 180));
-        double y = Math.sin(hourAngle * (Math.PI / 180)) * Math.cos(dec * (Math.PI / 180));
-        double z = Math.sin(dec * (Math.PI / 180));
+        double x = Math.cos(hourAngle * (PI / 180)) * Math.cos(dec * (PI / 180));
+        double y = Math.sin(hourAngle * (PI / 180)) * Math.cos(dec * (PI / 180));
+        double z = Math.sin(dec * (PI / 180));
 
-        double xhor = x * Math.cos((90 - lat) * (Math.PI / 180)) - z * Math.sin((90 - lat) * (Math.PI / 180));
+        double xhor = x * Math.cos((90 - lat) * (PI / 180)) - z * Math.sin((90 - lat) * (PI / 180));
         double yhor = y;
-        double zhor = x * Math.sin((90 - lat) * (Math.PI / 180)) + z * Math.cos((90 - lat) * (Math.PI / 180));
+        double zhor = x * Math.sin((90 - lat) * (PI / 180)) + z * Math.cos((90 - lat) * (PI / 180));
 
-        double az = Math.atan2(yhor, xhor) * (180 / Math.PI) + 180;
-        double alt = Math.asin(zhor) * (180 / Math.PI);
+        double az = Math.atan2(yhor, xhor) * (180 / PI) + 180;
+        double alt = asin(zhor) * (180 / PI);
         return new Target(ra, dec, alt, az);
     }
 
