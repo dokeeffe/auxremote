@@ -1,5 +1,6 @@
 package com.bobs.serialcommands;
 
+import com.bobs.coord.DefaultCalendarProvider;
 import com.bobs.mount.Mount;
 import com.bobs.mount.TrackingMode;
 
@@ -19,5 +20,6 @@ public class BaseCommandTest {
     public void setup() {
         mount.setTrackingMode(TrackingMode.EQ_NORTH);
         mount.setLongitude(351.6391);
+        mount.setCalendarProvider(new DefaultCalendarProvider());
     }
 }

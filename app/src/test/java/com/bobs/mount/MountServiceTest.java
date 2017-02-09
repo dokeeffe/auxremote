@@ -1,6 +1,7 @@
 package com.bobs.mount;
 
 import com.bobs.coord.CalendarProvider;
+import com.bobs.coord.DefaultCalendarProvider;
 import com.bobs.coord.Target;
 import com.bobs.serialcommands.*;
 import org.apache.commons.lang.time.DateUtils;
@@ -32,7 +33,7 @@ public class MountServiceTest {
     public void setUp() throws Exception {
         mountService = new MountService();
         fakeAuxAdapter = new FakeAuxAdapter();
-        CalendarProvider calendarProvider = new CalendarProvider();
+        CalendarProvider calendarProvider = new DefaultCalendarProvider();
         mount = new Mount();
         fakeAuxAdapter.setMount(mount);
         ReflectionTestUtils.setField(mountService, "mount", mount);
@@ -81,7 +82,7 @@ public class MountServiceTest {
         Target target = new Target();
         target.setRaHours(4.696695);
         target.setDec(-38.100300);
-        CalendarProvider mockCalendarProvider = mock(CalendarProvider.class);
+        CalendarProvider mockCalendarProvider = mock(DefaultCalendarProvider.class);
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.set(Calendar.YEAR, 2017);
         cal.set(Calendar.MONTH, Calendar.FEBRUARY);
