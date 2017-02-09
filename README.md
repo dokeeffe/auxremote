@@ -15,5 +15,6 @@ No more star alignment or hibernation mode needed to enable remote use. The moun
 THIS IS A WORK IN PROGRESS
 
 This system is in early alpha state and is currently being used and tested at [Ballyhoura Observatory](https://twitter.com/ballyhourastars) .
+![](http://52-8.xyz/images/allsky.gif)
 
 Special thanks to Andre Paquette for his amazing work [reverse engineering the AUX serial protocol](http://www.paquettefamily.ca/nexstar/NexStar_AUX_Commands_10.pdf) without his work this would not be possible.
