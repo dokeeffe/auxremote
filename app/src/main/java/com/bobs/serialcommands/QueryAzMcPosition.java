@@ -44,7 +44,7 @@ public class QueryAzMcPosition extends MountCommand {
         LOGGER.debug("ALTAZ raw data = {}", azimuthDegreesReportedByMount);
         if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
             Target position = altAz.buildFromNexstarEqNorth(
-                    mount.getCalendarProvider().currentCalendar(),
+                    mount.getCalendarProvider().provide(),
                     mount.getLongitude(),
                     azimuthDegreesReportedByMount,
                     mount.getDecDegrees());

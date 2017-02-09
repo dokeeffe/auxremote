@@ -90,13 +90,9 @@ public class MountService {
             mount.setTrackingState(TrackingState.SLEWING);
         }
         if (fastSlewRequired(mount, target)) {
-            slewAndWait(target, true, parkSlew);
+            slewAndWait(target, true);
         }
-        slewAndWait(target, false, parkSlew);
-        //update position from mount.
-        auxAdapter.queueCommand(new QueryAzMcPosition(mount));
-        auxAdapter.queueCommand(new QueryAltMcPosition(mount));
-        auxAdapter.waitForQueueEmpty();
+        slewAndWait(target, false);
         if (parkSlew) {
             mount.setTrackingState(TrackingState.PARKED);
         } else {
@@ -110,14 +106,13 @@ public class MountService {
      *
      * @param target the @{link Target} to slew to
      * @param fast   true/false for fast/slow slew
-     * @param parkingSlew if true then the slew is to park the scope
      */
-    private void slewAndWait(Target target, boolean fast, boolean parkingSlew) {
+    private void slewAndWait(Target target, boolean fast) {
         mount.setAltSlewInProgress(true);
         mount.setAzSlewInProgress(true);
         AltAz altAz = new AltAz();
         double azimuthAxisDegrees = altAz.convertRaFromDegToNexstarTicks(
-                mount.getCalendarProvider().currentCalendar(),
+                mount.getCalendarProvider().provide(),
                 mount.getLongitude(),
                 altAz.convertRaHoursToDeg(target.getRaHours()));
         double altitudeAxisDegrees = target.getDec();
@@ -134,7 +129,10 @@ public class MountService {
                 auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.ALT));
                 sleep(500);
             }
-            enforceAltSlewLimit();
+            auxAdapter.queueCommand(new QueryAzMcPosition(mount));
+            auxAdapter.queueCommand(new QueryAltMcPosition(mount));
+            auxAdapter.waitForQueueEmpty();
+            enforceSlewLimit();
         }
     }
 
@@ -143,16 +141,16 @@ public class MountService {
      * Enforce an ALT slew limit for the ALT axis to prevent damage.
      * If limit detected then send serial commands to abort any motion
      */
-    private void enforceAltSlewLimit() {
-        if (mount.getSlewLimitAlt() != null) {
-            if (mount.getDecDegrees() + (90 - mount.getLatitude()) < mount.getSlewLimitAlt()) {
-                mount.setStatusMessage("slew limit reached");
-                auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, true));
-                auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, true));
-                mount.setAltSlewInProgress(false);
-                mount.setAzSlewInProgress(false);
-                throw new RuntimeException("Slew Limit Reached");
-            }
+    private void enforceSlewLimit() {
+        AltAz altAz = new AltAz();
+        altAz.populateAltAzFromRaDec(mount);
+        if (mount.getAz() != null && mount.getAlt() < mount.getSlewLimitAlt()) {
+            mount.setStatusMessage("slew limit reached, aborting");
+            auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, true));
+            auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, true));
+            mount.setAltSlewInProgress(false);
+            mount.setAzSlewInProgress(false);
+            throw new RuntimeException("Slew Limit Reached");
         }
     }
 
@@ -207,7 +205,6 @@ public class MountService {
 
     /**
      * Start tracking mode depending on the mount's trackingMode. Note: This could also switch off tracking since OFF is a valid guide rate
-     * TODO: Implement EQ_SOUTH and ALT_AZ tracking modes.
      */
     public void startTracking() {
         if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
@@ -221,14 +218,12 @@ public class MountService {
                 mount.setTrackingState(TrackingState.TRACKING);
             }
         } else {
-            //TODO: Implement tracking for ALT-AZ mode and eq south
             throw new UnsupportedOperationException("Currently only EQ north mode is supported.");
         }
     }
 
     /**
      * Connect to the mount and enable some default features such as cordwrap.
-     * TODO: Get GPS coordinates and block until GPS connected or timed out 2min. Then default to last saved.
      *
      * @return
      */

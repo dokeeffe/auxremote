@@ -90,7 +90,7 @@ public class MountServiceTest {
         cal.set(Calendar.HOUR_OF_DAY, 20);
         cal.set(Calendar.MINUTE, 12);
         cal.set(Calendar.SECOND, 18);
-        when(mockCalendarProvider.currentCalendar()).thenReturn(cal);
+        when(mockCalendarProvider.provide()).thenReturn(cal);
         mount.setCalendarProvider(mockCalendarProvider);
 
         //act
@@ -113,13 +113,15 @@ public class MountServiceTest {
         assertEquals(Goto.class, queuedCommands.get(1).getClass());
         assertEquals(QuerySlewDone.class, queuedCommands.get(2).getClass());
         assertEquals(QuerySlewDone.class, queuedCommands.get(3).getClass());
-        assertEquals(Goto.class, queuedCommands.get(4).getClass());
-        assertEquals(Goto.class, queuedCommands.get(5).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(6).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(7).getClass());
-        assertEquals(QueryAzMcPosition.class, queuedCommands.get(8).getClass());
-        assertEquals(QueryAltMcPosition.class, queuedCommands.get(9).getClass());
-        assertEquals(10, queuedCommands.size());
+        assertEquals(QueryAzMcPosition.class, queuedCommands.get(4).getClass());
+        assertEquals(QueryAltMcPosition.class, queuedCommands.get(5).getClass());
+        assertEquals(Goto.class, queuedCommands.get(6).getClass());
+        assertEquals(Goto.class, queuedCommands.get(7).getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.get(8).getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.get(9).getClass());
+        assertEquals(QueryAzMcPosition.class, queuedCommands.get(10).getClass());
+        assertEquals(QueryAltMcPosition.class, queuedCommands.get(11).getClass());
+        assertEquals(12, queuedCommands.size());
     }
 
     @Test
@@ -157,31 +159,36 @@ public class MountServiceTest {
         assertEquals(Goto.class, queuedCommands.get(1).getClass());
         assertEquals(QuerySlewDone.class, queuedCommands.get(2).getClass());
         assertEquals(QuerySlewDone.class, queuedCommands.get(3).getClass());
-        assertEquals(Goto.class, queuedCommands.get(4).getClass());
-        assertEquals(Goto.class, queuedCommands.get(5).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(6).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(7).getClass());
-        assertEquals(QueryAzMcPosition.class, queuedCommands.get(8).getClass());
-        assertEquals(QueryAltMcPosition.class, queuedCommands.get(9).getClass());
-        assertEquals(SetGuideRate.class, queuedCommands.get(10).getClass());
-        assertEquals(SetGuideRate.class, queuedCommands.get(11).getClass());
+        assertEquals(QueryAzMcPosition.class, queuedCommands.get(4).getClass());
+        assertEquals(QueryAltMcPosition.class, queuedCommands.get(5).getClass());
+        assertEquals(Goto.class, queuedCommands.get(6).getClass());
+        assertEquals(Goto.class, queuedCommands.get(7).getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.get(8).getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.get(9).getClass());
+        assertEquals(QueryAzMcPosition.class, queuedCommands.get(10).getClass());
+        assertEquals(QueryAltMcPosition.class, queuedCommands.get(11).getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.get(12).getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.get(13).getClass());
         assertEquals(TrackingState.PARKED, mount.getTrackingState());
-        assertEquals(12, queuedCommands.size());
+        assertEquals(14, queuedCommands.size());
     }
 
 
-    @Test
-    public void park_crash_test() throws Exception {
+    @Test(expected = RuntimeException.class)
+    public void park_when_targetBelowHorizion_then_slewLimitPreventsDamage() throws Exception {
         mount.setAligned(true);
         mount.setLatitude(52.25338293632168);
         mount.setLongitude(351.63942525621803);
+        Calendar cal = generateTestCalender();
+        CalendarProvider mockCalendarProvider = mock(CalendarProvider.class);
+        when(mockCalendarProvider.provide()).thenReturn(cal);
+        mount.setCalendarProvider(mockCalendarProvider);
+
         Target target = new Target();
-        target.setRaHours(4.696695);
+        target.setRaHours(19.696695);
         target.setDec(-38.100300);
 
         mountService.park(target);
-
-        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
     }
 
 
@@ -646,6 +653,17 @@ public class MountServiceTest {
         assertEquals(PecStopRecording.class, queuedCommands.get(0).getClass());
         assertEquals(PecPlayback.class, queuedCommands.get(1).getClass());
 
+    }
+
+    private Calendar generateTestCalender() {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.set(Calendar.YEAR, 2017);
+        cal.set(Calendar.MONTH, Calendar.FEBRUARY);
+        cal.set(Calendar.DAY_OF_MONTH, 5);
+        cal.set(Calendar.HOUR_OF_DAY, 20);
+        cal.set(Calendar.MINUTE, 12);
+        cal.set(Calendar.SECOND, 18);
+        return cal;
     }
 
 }

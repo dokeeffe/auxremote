@@ -11,7 +11,7 @@ import java.util.Calendar;
 public class DefaultCalendarProvider implements CalendarProvider {
 
     @Override
-    public Calendar currentCalendar() {
+    public Calendar provide() {
         return Calendar.getInstance();
     }
 }

@@ -8,6 +8,8 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by dokeeffe on 12/21/16.
@@ -27,11 +29,22 @@ public class AltAzTest {
     public void testpopulateAltAzFromRaDec_when_BelowHorizion_then_corectAltCalculated() {
         //RA 19.187847689497158, DEC -38.42831125428148 These coords were reported during field testing when the mount crashed into the pier pointing straight down.
         Mount mount = new Mount();
-        Target target = new Target();
-        target.setRaHours(19.187847689497158);
-        target.setDec(-38.42831125428148);
+        mount.setRaHours(19.187847689497158);
+        mount.setDecDegrees(-38.42831125428148);
         mount.setLongitude(HOME_LON);
         mount.setLatitude(HOME_LAT);
+        Calendar cal = generateTestCalender();
+        CalendarProvider mockCalendarProvider = mock(CalendarProvider.class);
+        when(mockCalendarProvider.provide()).thenReturn(cal);
+        mount.setCalendarProvider(mockCalendarProvider);
+
+        sut.populateAltAzFromRaDec(mount);
+
+        assertEquals(-60.9, mount.getAlt(), 0.1);
+        assertEquals(283.4, mount.getAz(), 0.1);
+    }
+
+    private Calendar generateTestCalender() {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.set(Calendar.YEAR, 2017);
         cal.set(Calendar.MONTH, Calendar.FEBRUARY);
@@ -39,11 +52,7 @@ public class AltAzTest {
         cal.set(Calendar.HOUR_OF_DAY, 20);
         cal.set(Calendar.MINUTE, 12);
         cal.set(Calendar.SECOND, 18);
-
-        sut.populateAltAzFromRaDec(cal, target, mount);
-
-        assertEquals(-60.9, target.getAlt(), 0.1);
-        assertEquals(283.4, target.getAz(), 0.1);
+        return cal;
     }
 
     /**
@@ -54,40 +63,34 @@ public class AltAzTest {
     @Test
     public void conversionOfRaDecToAltAz_when_LargeSetOfPreCalculatedData_then_valuesMatchPreCalculated() throws FileNotFoundException {
         Mount mount = new Mount();
-        Target target = new Target();
         Scanner scanner = new Scanner(new File("src/test/resources/radec-altaz.csv"));
         List<Double> altError = new ArrayList<>();
         List<Double> azError = new ArrayList<>();
         while (scanner.hasNextLine()) {
             String[] line = scanner.nextLine().split(",");
-            target.setRaHours(Double.parseDouble(line[0]));
-            target.setDec(Double.parseDouble(line[1]));
+            mount.setRaHours(Double.parseDouble(line[0]));
+            mount.setDecDegrees(Double.parseDouble(line[1]));
             mount.setLongitude(HOME_LON);
             mount.setLatitude(HOME_LAT);
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            cal.set(Calendar.YEAR, 2017);
-            cal.set(Calendar.MONTH, Calendar.FEBRUARY);
-            cal.set(Calendar.DAY_OF_MONTH, 5);
-            cal.set(Calendar.HOUR_OF_DAY, 20);
-            cal.set(Calendar.MINUTE, 12);
-            cal.set(Calendar.SECOND, 18);
+            Calendar cal = generateTestCalender();
+            CalendarProvider mockCalendarProvider = mock(CalendarProvider.class);
+            when(mockCalendarProvider.provide()).thenReturn(cal);
+            mount.setCalendarProvider(mockCalendarProvider);
 
-            sut.populateAltAzFromRaDec(cal, target, mount);
+            sut.populateAltAzFromRaDec(mount);
 
             double expectedAlt = Double.parseDouble(line[2]);
             double expectedAz = Double.parseDouble(line[3]);
-            System.out.println("ALT Calc=" + target.getAlt() + " Expected=" + expectedAlt);
-            System.out.println("AZ  Calc=" + target.getAz() + " Expected=" + expectedAz);
-            altError.add(target.getAlt() - expectedAlt);
-            azError.add(target.getAz() - expectedAz);
+            System.out.println("ALT Calc=" + mount.getAlt() + " Expected=" + expectedAlt);
+            System.out.println("AZ  Calc=" + mount.getAz() + " Expected=" + expectedAz);
+            altError.add(mount.getAlt() - expectedAlt);
+            azError.add(mount.getAz() - expectedAz);
 
-            assertEquals(target.getAlt(), expectedAlt, 1.5);
-            assertEquals(target.getAz(), expectedAz, 1.5);
+            assertEquals(mount.getAlt(), expectedAlt, 1.5);
+            assertEquals(mount.getAz(), expectedAz, 1.5);
         }
         System.out.println(altError.stream().mapToDouble(a -> a).summaryStatistics());
         System.out.println(azError.stream().mapToDouble(a -> a).summaryStatistics());
-
-
     }
 
 

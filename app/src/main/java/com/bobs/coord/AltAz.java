@@ -41,14 +41,13 @@ public class AltAz {
     /**
      * Populate the alt-az values for a given RA/DEC contained in the passed target for the passed mount's location
      *
-     * @param cal
-     * @param target
      * @param mount
      */
-    public void populateAltAzFromRaDec(Calendar cal, Target target, Mount mount) {
-        Target altAz = buildFromRaDec(cal, mount.getLatitude(), mount.getLongitude(), target.getRaHours(), target.getDec());
-        target.setAlt(altAz.getAlt());
-        target.setAz(altAz.getAz());
+    public void populateAltAzFromRaDec(Mount mount) {
+        Calendar cal = mount.getCalendarProvider().provide();
+        Target altAz = buildAltAzTargetFromRaDec(cal, mount.getLatitude(), mount.getLongitude(), mount.getRaHours(), mount.getDecDegrees());
+        mount.setAlt(altAz.getAlt());
+        mount.setAz(altAz.getAz());
     }
 
     /**
@@ -61,7 +60,7 @@ public class AltAz {
      * @param dec      declination in degrees
      * @return a Target with alt az populated
      */
-    public Target buildFromRaDec(Calendar calendar, double lat, double lon, double ra, double dec) {
+    private Target buildAltAzTargetFromRaDec(Calendar calendar, double lat, double lon, double ra, double dec) {
         Calendar utc = convertCalendarToUtcCalendar(calendar);
         ra = convertRaHoursToDeg(ra);
         double lst = localSiderealTime(utc, lon);

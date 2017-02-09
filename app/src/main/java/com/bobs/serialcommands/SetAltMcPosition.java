@@ -40,7 +40,8 @@ public class SetAltMcPosition extends MountCommand {
     public void handleMessage(byte[] message) {
         if (message[0] != ACK) {
             LOGGER.error("Expected ACK, but got {}", DatatypeConverter.printHexBinary(message));
-            mount.setError("SYNC ERROR SetAltMcPosition");
+            mount.setAligned(false);
+            mount.setStatusMessage("SYNC ERROR SetAltMcPosition");
         }
     }
 }

@@ -82,20 +82,20 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
                 serialPort.writeBytes(cmd);
                 byte[] response1 = outputChannel.poll(RESPONSE_TIMEOUT_SEC, TimeUnit.SECONDS);
                 if (response1 == null || response1.length == 0) {
-                    LOGGER.error("Comms error, invalid response from mount {}", response1);
+                    LOGGER.error("Comms error, invalid response from mount {} or timed out waiting", response1);
                 } else {
                     try {
                         LOGGER.debug("Processing response from mount");
                         command.handleMessage(response1);
                     } catch (Exception ex) {
-                        //FIXME: better error handling.. if an exception gets thrown from here then it kills the serial processor thread esentially killing the entire app
-                        LOGGER.error("Fatal error processing response", ex);
+                        //Catch all to avoid killing this message processing thread.
+                        LOGGER.error("Fatal error processing response. Continuing to Process messages", ex);
                     }
                 }
             } catch (SerialPortException e) {
-                e.printStackTrace();
+                LOGGER.error("Fatal Serial Port Exception processing response", e);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LOGGER.error("Polling interrupted", e);
             }
         }
     }

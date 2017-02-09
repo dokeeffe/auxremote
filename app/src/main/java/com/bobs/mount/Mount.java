@@ -29,6 +29,7 @@ public class Mount {
     public static final String PERSISTANCE_STORE = "auxremote-mount.json";
     private static final Logger LOGGER = LoggerFactory.getLogger(Mount.class);
     private static final long ONE_HOUR = 1000 * 60 * 60;
+    private static final Double DEFAULT_ALT_SLEW_LIMIT = -10.0;
     private String version;
     private TrackingState trackingState;
     private Double raHours = 0.0;
@@ -39,7 +40,7 @@ public class Mount {
     private boolean gpsConnected;
     private Date gpsUpdateTime;
     private String gpsReceiverStatus;
-    private Double slewLimitAlt;
+    private Double slewLimitAlt = DEFAULT_ALT_SLEW_LIMIT;
     private Double slewLimitAz;
     private boolean locationSet = false;
     private boolean altSlewInProgress = false;
@@ -53,6 +54,8 @@ public class Mount {
     private GuideRate guideRate;
     private double cordWrapPosition;
     private String statusMessage;
+    private Double alt;
+    private Double az;
 
     @Autowired
     private CalendarProvider calendarProvider;
@@ -326,5 +329,21 @@ public class Mount {
 
     public void setCalendarProvider(CalendarProvider calendarProvider) {
         this.calendarProvider = calendarProvider;
+    }
+
+    public Double getAlt() {
+        return alt;
+    }
+
+    public void setAlt(Double alt) {
+        this.alt = alt;
+    }
+
+    public Double getAz() {
+        return az;
+    }
+
+    public void setAz(Double az) {
+        this.az = az;
     }
 }
