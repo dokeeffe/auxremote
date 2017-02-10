@@ -1,12 +1,13 @@
 package com.bobs.serialcommands;
 
-import com.bobs.mount.Axis;
-import com.bobs.mount.Mount;
-import com.bobs.mount.TrackingState;
+import javax.xml.bind.DatatypeConverter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
+import com.bobs.mount.Axis;
+import com.bobs.mount.Mount;
+import com.bobs.mount.TrackingState;
 
 /**
  * Created by dokeeffe on 25/12/16.
@@ -24,13 +25,13 @@ public class Goto extends MountCommand {
      * Constructor
      *
      * @param mount
-     * @param position
+     * @param positionDegrees
      * @param axis
      * @param fast
      */
-    public Goto(Mount mount, Double position, Axis axis, boolean fast) {
+    public Goto(Mount mount, Double positionDegrees, Axis axis, boolean fast) {
         super(mount);
-        this.position = position;
+        this.position = positionDegrees;
         this.axis = axis;
         this.fast = fast;
     }

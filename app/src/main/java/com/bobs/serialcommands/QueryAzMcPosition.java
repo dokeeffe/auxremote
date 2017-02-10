@@ -1,13 +1,14 @@
 package com.bobs.serialcommands;
 
-import com.bobs.coord.AltAz;
-import com.bobs.coord.Target;
-import com.bobs.mount.Mount;
-import com.bobs.mount.TrackingMode;
+import javax.xml.bind.DatatypeConverter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
+import com.bobs.coord.CoordTransformer;
+import com.bobs.coord.Target;
+import com.bobs.mount.Mount;
+import com.bobs.mount.TrackingMode;
 
 /**
  * Created by dokeeffe on 25/12/16.
@@ -38,12 +39,12 @@ public class QueryAzMcPosition extends MountCommand {
 
     @Override
     public void handleMessage(byte[] message) {
-        AltAz altAz = new AltAz();
+        CoordTransformer coordTransformer = new CoordTransformer();
         String hex = DatatypeConverter.printHexBinary(message);
         double azimuthDegreesReportedByMount = bytesToDegrees(hex);
         LOGGER.debug("ALTAZ raw data = {}", azimuthDegreesReportedByMount);
         if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
-            Target position = altAz.buildFromNexstarEqNorth(
+            Target position = coordTransformer.buildTargetFromNexstarEqNorth(
                     mount.getCalendarProvider().provide(),
                     mount.getLongitude(),
                     azimuthDegreesReportedByMount,

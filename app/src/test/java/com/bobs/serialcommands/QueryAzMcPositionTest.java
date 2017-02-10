@@ -1,15 +1,17 @@
 package com.bobs.serialcommands;
 
-import com.bobs.coord.AltAz;
-import com.bobs.coord.Target;
-import com.bobs.mount.TrackingMode;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Calendar;
+
+import javax.xml.bind.DatatypeConverter;
+
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.xml.bind.DatatypeConverter;
-import java.util.Calendar;
-
-import static org.junit.Assert.assertEquals;
+import com.bobs.coord.CoordTransformer;
+import com.bobs.coord.Target;
+import com.bobs.mount.TrackingMode;
 
 /**
  * Created by dokeeffe on 1/2/17.
@@ -32,9 +34,9 @@ public class QueryAzMcPositionTest extends BaseCommandTest {
     @Test
     public void handleMessage() {
         //arrange
-        AltAz altAz = new AltAz();
+        CoordTransformer coordTransformer = new CoordTransformer();
         double azPos = 2.42143406995738; //01B8CF
-        Target position = altAz.buildFromNexstarEqNorth(Calendar.getInstance(), mount.getLongitude(), azPos, mount.getDecDegrees());
+        Target position = coordTransformer.buildTargetFromNexstarEqNorth(Calendar.getInstance(), mount.getLongitude(), azPos, mount.getDecDegrees());
         mount.setRaHours(position.getRaHours() - 0.1);
         byte[] message = new byte[3];
         message[0] = (byte) 0x01;

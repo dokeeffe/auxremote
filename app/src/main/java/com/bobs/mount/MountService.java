@@ -1,10 +1,10 @@
 package com.bobs.mount;
 
-import com.bobs.coord.AltAz;
-import com.bobs.coord.Target;
-import com.bobs.io.NexstarAuxAdapter;
-import com.bobs.io.NexstarAuxSerialAdapter;
-import com.bobs.serialcommands.*;
+import static com.bobs.coord.CoordTransformer.ONE_DEG_IN_HOURS;
+
+import java.util.Calendar;
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +12,31 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.Calendar;
-import java.util.Date;
-
-import static com.bobs.coord.AltAz.ONE_DEG_IN_HOURS;
+import com.bobs.coord.CoordTransformer;
+import com.bobs.coord.Target;
+import com.bobs.io.NexstarAuxAdapter;
+import com.bobs.io.NexstarAuxSerialAdapter;
+import com.bobs.serialcommands.EnableCordWrap;
+import com.bobs.serialcommands.Goto;
+import com.bobs.serialcommands.GpsLat;
+import com.bobs.serialcommands.GpsLinked;
+import com.bobs.serialcommands.GpsLon;
+import com.bobs.serialcommands.MountCommand;
+import com.bobs.serialcommands.Move;
+import com.bobs.serialcommands.PecPlayback;
+import com.bobs.serialcommands.PecQueryAtIndex;
+import com.bobs.serialcommands.PecQueryRecordDone;
+import com.bobs.serialcommands.PecSeekIndex;
+import com.bobs.serialcommands.PecStartRecording;
+import com.bobs.serialcommands.PecStopRecording;
+import com.bobs.serialcommands.QueryAltMcPosition;
+import com.bobs.serialcommands.QueryAzMcPosition;
+import com.bobs.serialcommands.QueryCordWrap;
+import com.bobs.serialcommands.QueryCordWrapPos;
+import com.bobs.serialcommands.QuerySlewDone;
+import com.bobs.serialcommands.SetAltMcPosition;
+import com.bobs.serialcommands.SetAzMcPosition;
+import com.bobs.serialcommands.SetGuideRate;
 
 /**
  * Responsible for interacting with the mount using a {@link NexstarAuxSerialAdapter}
@@ -53,13 +74,13 @@ public class MountService {
         if (mount.getTrackingState().equals(TrackingState.IDLE)) {
             startTracking();
         }
-        AltAz altAz = new AltAz();
+        CoordTransformer coordTransformer = new CoordTransformer();
         if (mount.getTrackingMode().equals(TrackingMode.EQ_NORTH)) {
-            double azimuthAxisDegrees = altAz.convertRaFromDegToNexstarTicks(
+            double azimuthAxisDegrees = coordTransformer.convertRaFromDegToNexstarAzimuthAngle(
                     Calendar.getInstance(),
                     mount.getLongitude(),
-                    altAz.convertRaHoursToDeg(target.getRaHours()));
-            double altitudeAxisDegrees = altAz.convertDecToPositionAngleForEqNorth(target.getDec());
+                    coordTransformer.convertRaHoursToDeg(target.getRaHours()));
+            double altitudeAxisDegrees = coordTransformer.convertDecToPositionAngleForEqNorth(target.getDec());
             auxAdapter.queueCommand(new SetAltMcPosition(mount, altitudeAxisDegrees));
             auxAdapter.queueCommand(new SetAzMcPosition(mount, azimuthAxisDegrees));
         } else {
@@ -110,11 +131,11 @@ public class MountService {
     private void slewAndWait(Target target, boolean fast) {
         mount.setAltSlewInProgress(true);
         mount.setAzSlewInProgress(true);
-        AltAz altAz = new AltAz();
-        double azimuthAxisDegrees = altAz.convertRaFromDegToNexstarTicks(
+        CoordTransformer coordTransformer = new CoordTransformer();
+        double azimuthAxisDegrees = coordTransformer.convertRaFromDegToNexstarAzimuthAngle(
                 mount.getCalendarProvider().provide(),
                 mount.getLongitude(),
-                altAz.convertRaHoursToDeg(target.getRaHours()));
+                coordTransformer.convertRaHoursToDeg(target.getRaHours()));
         double altitudeAxisDegrees = target.getDec();
         LOGGER.debug("starting slew");
         auxAdapter.queueCommand(new Goto(mount, altitudeAxisDegrees, Axis.ALT, fast));
@@ -142,8 +163,8 @@ public class MountService {
      * If limit detected then send serial commands to abort any motion
      */
     private void enforceSlewLimit() {
-        AltAz altAz = new AltAz();
-        altAz.populateAltAzFromRaDec(mount);
+        CoordTransformer coordTransformer = new CoordTransformer();
+        coordTransformer.populateAltAzFromRaDec(mount);
         if (mount.getAz() != null && mount.getAlt() < mount.getSlewLimitAlt()) {
             mount.setStatusMessage("slew limit reached, aborting");
             auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, true));

@@ -1,20 +1,25 @@
 package com.bobs.coord;
 
-import com.bobs.mount.Mount;
-import org.junit.Test;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.*;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Scanner;
+import java.util.TimeZone;
+
+import org.junit.Test;
+
+import com.bobs.mount.Mount;
+
 /**
  * Created by dokeeffe on 12/21/16.
  */
-public class AltAzTest {
+public class CoordTransformerTest {
 
     public static final Double HOME_LAT = 52.2;
     public static final Double HOME_LON = 351.6;
@@ -23,7 +28,7 @@ public class AltAzTest {
     public static final Double ALBRERIO_RA = 19.55; //19 31 24
     public static final Double ALBRERIO_DEC = 28.0; //27 59 57
 
-    AltAz sut = new AltAz();
+    CoordTransformer sut = new CoordTransformer();
 
     @Test
     public void testpopulateAltAzFromRaDec_when_BelowHorizion_then_corectAltCalculated() {
@@ -106,11 +111,8 @@ public class AltAzTest {
         double valFromNexstarAzMcBoard = 176.91956859347633;
         double valFromNexstarAltMcBoard = 7.407446349110982;
 
-        Target result = sut.buildFromNexstarEqNorth(cal2, HOME_LON, valFromNexstarAzMcBoard, valFromNexstarAltMcBoard);
+        Target result = sut.buildTargetFromNexstarEqNorth(cal2, HOME_LON, valFromNexstarAzMcBoard, valFromNexstarAltMcBoard);
 
-        System.out.println("RA diff " + (BETELGEUSE_RA - result.getRaDeg()));
-        System.out.println("DEC diff " + (BETELGEUSE_DEC - result.getDec()));
-        System.out.println("hours " + sut.convertRaDegToHours(result.getRaDeg()));
         assertEquals(BETELGEUSE_DEC, result.getDec(), delta);
         assertEquals(6.0, result.getRaHours(), delta);
     }
@@ -127,7 +129,7 @@ public class AltAzTest {
         double valFromNexstarAzMcBoard = 218.484905867869;
         double valFromNexstarAltMcBoard = 28.0;
 
-        Target result = sut.buildFromNexstarEqNorth(cal2, HOME_LON, valFromNexstarAzMcBoard, valFromNexstarAltMcBoard);
+        Target result = sut.buildTargetFromNexstarEqNorth(cal2, HOME_LON, valFromNexstarAzMcBoard, valFromNexstarAltMcBoard);
 
         System.out.println("RA diff " + (ALBRERIO_RA - result.getRaDeg()));
         System.out.println("DEC diff " + (ALBRERIO_DEC - result.getDec()));
@@ -138,17 +140,17 @@ public class AltAzTest {
 
     @Test
     public void testLocalSiderealTime() {
-        double result = sut.localSiderealTime(Calendar.getInstance(), HOME_LON);
+        double result = sut.localSiderealTime(generateTestCalender(), HOME_LON);
         System.out.println("LST: " + result);
-        System.out.println("LST: " + sut.convertRaDegToHours(result));
+        assertEquals(70.76,result,0.1);
     }
 
-    @Test
-    public void testConvertRaDegToHours() {
-        double delta = 0.02;
-        double result = sut.convertRaDegToHours(BETELGEUSE_RA);
-        assertEquals(5.919, result, delta);
-    }
+//    @Test
+//    public void testConvertRaDegToHours() {
+//        double delta = 0.02;
+//        double result = sut.convertRaDegToHours(BETELGEUSE_RA);
+//        assertEquals(5.919, result, delta);
+//    }
 
     @Test
     public void testConverHoursToDeg() {
@@ -167,7 +169,7 @@ public class AltAzTest {
         cal2.set(Calendar.HOUR_OF_DAY, 16);
         cal2.set(Calendar.MINUTE, 12);
 
-        double result = sut.convertRaFromDegToNexstarTicks(cal2, HOME_LON, sut.convertRaHoursToDeg(ALBRERIO_RA));
+        double result = sut.convertRaFromDegToNexstarAzimuthAngle(cal2, HOME_LON, sut.convertRaHoursToDeg(ALBRERIO_RA));
 
         assertEquals(218, result, delta);
     }
@@ -182,7 +184,7 @@ public class AltAzTest {
         cal.set(Calendar.MINUTE, 11);
         cal.set(Calendar.SECOND, 04);
 
-        double ticks = sut.convertRaFromDegToNexstarTicks(cal, HOME_LON, 70.450425);
+        double ticks = sut.convertRaFromDegToNexstarAzimuthAngle(cal, HOME_LON, 70.450425);
 
         System.out.println(ticks);
         assertEquals(180, ticks,0.1);
@@ -190,19 +192,20 @@ public class AltAzTest {
 
     @Test
     public void testConvertPositionAngleToDecForEqNorth() {
-        assertEquals(0, sut.convertPositionAngleToDecForEqNorth(0.0), 0);
-        assertEquals(45, sut.convertPositionAngleToDecForEqNorth(45.0), 0);
-        assertEquals(90, sut.convertPositionAngleToDecForEqNorth(90.0), 0);
-        assertEquals(89, sut.convertPositionAngleToDecForEqNorth(91.0), 0);
-        assertEquals(-10, sut.convertPositionAngleToDecForEqNorth(350.0), 0);
-        assertEquals(-45, sut.convertPositionAngleToDecForEqNorth(360 - 45), 0);
-        assertEquals(-90, sut.convertPositionAngleToDecForEqNorth(360 - 90), 0);
-        assertEquals(-89, sut.convertPositionAngleToDecForEqNorth(360 - 91), 0);
-        assertEquals(-20, sut.convertPositionAngleToDecForEqNorth(200.0), 0);
+        assertEquals(0, sut.convertAltPositionAngleToDecForEqNorth(0.0), 0);
+        assertEquals(45, sut.convertAltPositionAngleToDecForEqNorth(45.0), 0);
+        assertEquals(90, sut.convertAltPositionAngleToDecForEqNorth(90.0), 0);
+        assertEquals(89, sut.convertAltPositionAngleToDecForEqNorth(91.0), 0);
+        assertEquals(-10, sut.convertAltPositionAngleToDecForEqNorth(350.0), 0);
+        assertEquals(-45, sut.convertAltPositionAngleToDecForEqNorth(360 - 45), 0);
+        assertEquals(-90, sut.convertAltPositionAngleToDecForEqNorth(360 - 90), 0);
+        assertEquals(-89, sut.convertAltPositionAngleToDecForEqNorth(360 - 91), 0);
+        assertEquals(-20, sut.convertAltPositionAngleToDecForEqNorth(200.0), 0);
     }
 
     @Test
     public void testConvertDecToPositionAngleForEqNorth() {
         assertEquals(350, sut.convertDecToPositionAngleForEqNorth(-10), 0);
+        assertEquals(20, sut.convertDecToPositionAngleForEqNorth(20), 0);
     }
 }
