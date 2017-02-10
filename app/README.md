@@ -19,3 +19,14 @@ UNPARK
 MOVE NSEW
 GUIDE NSEW
 PEC
+
+
+Installing as a system service on linux
+
+Copy the jar to /opt/auxremote
+
+``
+sudo ln -s /opt/auxremote/auxremote-0.0.1-SNAPSHOT.jar /etc/init.d/auxremote
+sudo update-rc.d auxremote defaults
+
+``
