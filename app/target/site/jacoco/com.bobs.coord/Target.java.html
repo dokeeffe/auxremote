@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Target.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auxremote</a> &gt; <a href="index.source.html" class="el_package">com.bobs.coord</a> &gt; <span class="el_source">Target.java</span></div><h1>Target.java</h1><pre class="source lang-java linenums">package com.bobs.coord;
+
+
+/**
+ * Created by dokeeffe on 12/20/16.
+ */
+public class Target {
+
+    private Double raDeg;
+    private Double raHours;
+    private Double dec;
+    private Double alt;
+    private Double az;
+    private String motion; //TODO enum for n,s,e,w,abort
+    private Integer motionRate;
+    private String type; //TODO: make enum, either sync or slew, park or unpark
+    private Double guidePulseDurationMs;
+
+<span class="fc" id="L19">    public Target() {</span>
+        //default constructor
+<span class="fc" id="L21">    }</span>
+
+<span class="fc" id="L23">    public Target(Double raDeg, Double dec, Double alt, Double az) {</span>
+<span class="fc" id="L24">        this.raDeg = raDeg;</span>
+<span class="fc" id="L25">        this.dec = dec;</span>
+<span class="fc" id="L26">        this.alt = alt;</span>
+<span class="fc" id="L27">        this.az = az;</span>
+<span class="fc" id="L28">    }</span>
+
+    public Double getRaDeg() {
+<span class="fc" id="L31">        return raDeg;</span>
+    }
+
+    public void setRaDeg(Double raDeg) {
+<span class="nc" id="L35">        this.raDeg = raDeg;</span>
+<span class="nc" id="L36">    }</span>
+
+    public Double getRaHours() {
+<span class="fc" id="L39">        return raHours;</span>
+    }
+
+    public void setRaHours(Double raHours) {
+<span class="fc" id="L43">        this.raHours = raHours;</span>
+<span class="fc" id="L44">    }</span>
+
+    public Double getDec() {
+<span class="fc" id="L47">        return dec;</span>
+    }
+
+    public void setDec(Double dec) {
+<span class="fc" id="L51">        this.dec = dec;</span>
+<span class="fc" id="L52">    }</span>
+
+    public Double getAlt() {
+<span class="nc" id="L55">        return alt;</span>
+    }
+
+    public void setAlt(Double alt) {
+<span class="nc" id="L59">        this.alt = alt;</span>
+<span class="nc" id="L60">    }</span>
+
+    public Double getAz() {
+<span class="nc" id="L63">        return az;</span>
+    }
+
+    public void setAz(Double az) {
+<span class="nc" id="L67">        this.az = az;</span>
+<span class="nc" id="L68">    }</span>
+
+    public String getMotion() {
+<span class="fc" id="L71">        return motion;</span>
+    }
+
+    public void setMotion(String motion) {
+<span class="fc" id="L75">        this.motion = motion;</span>
+<span class="fc" id="L76">    }</span>
+
+    public Integer getMotionRate() {
+<span class="fc" id="L79">        return motionRate;</span>
+    }
+
+    public void setMotionRate(Integer motionRate) {
+<span class="fc" id="L83">        this.motionRate = motionRate;</span>
+<span class="fc" id="L84">    }</span>
+
+    public String getType() {
+<span class="fc" id="L87">        return type;</span>
+    }
+
+    public void setType(String type) {
+<span class="fc" id="L91">        this.type = type;</span>
+<span class="fc" id="L92">    }</span>
+
+    public Double getGuidePulseDurationMs() {
+<span class="fc" id="L95">        return guidePulseDurationMs;</span>
+    }
+
+    public void setGuidePulseDurationMs(Double guidePulseDurationMs) {
+<span class="fc" id="L99">        this.guidePulseDurationMs = guidePulseDurationMs;</span>
+<span class="fc" id="L100">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>

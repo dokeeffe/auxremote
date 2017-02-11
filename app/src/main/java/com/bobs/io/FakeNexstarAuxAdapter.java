@@ -4,6 +4,7 @@ import com.bobs.serialcommands.*;
 import jssc.SerialPortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import java.util.concurrent.BlockingQueue;
@@ -33,6 +34,10 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
 
     private boolean connected;
     private String serialPortName;
+    private byte[] altMcPosition;
+    private byte[] azMcPosition;
+    private byte[] goToAltMcPosition;
+    private byte[] goToAzMcPosition;
 
     /**
      * Queue a serial command. Serial commands are only issued in series (one after another)
@@ -75,15 +80,71 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
             if (command instanceof Move) {
                 command.handleMessage(new byte[]{ACK});
             }
+            if (command instanceof SetAltMcPosition) {
+                handleSetAltMcPosition(((SetAltMcPosition)command));
+            }
+            if (command instanceof SetAzMcPosition) {
+                handleSetAzMcPosition(((SetAzMcPosition)command));
+            }
+            if (command instanceof QueryAzMcPosition) {
+                command.handleMessage(this.azMcPosition);
+            }
+            if (command instanceof QueryAltMcPosition) {
+                command.handleMessage(this.altMcPosition);
+            }
+            if (command instanceof Goto) {
+                handleGoto(((Goto)command));
+            }
+
         }
+    }
+
+    private void handleGoto(Goto command) {
+        byte[] goToCommand = command.getCommand();
+        byte[] ticks = new byte[3];
+        ticks[0] = goToCommand[4];
+        ticks[1] = goToCommand[5];
+        ticks[2] = goToCommand[6];
+        if (goToCommand[2] == ALT_BOARD) {
+            this.goToAltMcPosition = ticks;
+        } else {
+            this.goToAzMcPosition = ticks;
+        }
+
+    }
+
+    private void handleSetAzMcPosition(SetAzMcPosition command) {
+        byte setAltPosCommand[] = command.getCommand();
+        byte[] ticks = new byte[3];
+        ticks[0] = setAltPosCommand[4];
+        ticks[1] = setAltPosCommand[5];
+        ticks[2] = setAltPosCommand[6];
+        this.azMcPosition = ticks;
+    }
+
+    private void handleSetAltMcPosition(SetAltMcPosition command) {
+        byte setAltPosCommand[] = command.getCommand();
+        byte[] ticks = new byte[3];
+        ticks[0] = setAltPosCommand[4];
+        ticks[1] = setAltPosCommand[5];
+        ticks[2] = setAltPosCommand[6];
+        this.altMcPosition = ticks;
     }
 
     private void fakeLongRunningOperation(MountCommand command, int callsTillDone) {
         fakeOperationTimerCounter++;
         if (fakeOperationTimerCounter >= callsTillDone) {
             command.handleMessage(new byte[]{OPERATION_COMPLETE});
+            if(this.goToAltMcPosition!=null && this. goToAzMcPosition!=null) {
+                LOGGER.info("Finalizing goto operation");
+                this.altMcPosition = goToAltMcPosition;
+                this.azMcPosition = goToAzMcPosition;
+                this.goToAltMcPosition = null;
+                this.goToAzMcPosition = null;
+            }
             fakeOperationTimerCounter = 0;
         } else {
+            LOGGER.info("Faking long running operation, not done yet.");
             command.handleMessage(new byte[]{OPERATION_PENDING});
         }
     }

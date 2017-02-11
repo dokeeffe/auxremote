@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CoordTransformer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auxremote</a> &gt; <a href="index.source.html" class="el_package">com.bobs.coord</a> &gt; <span class="el_source">CoordTransformer.java</span></div><h1>CoordTransformer.java</h1><pre class="source lang-java linenums">package com.bobs.coord;
+
+import static java.lang.Math.PI;
+import static java.lang.Math.asin;
+
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.bobs.mount.Mount;
+
+/**
+ * Responsible for all sorts of transformations between coordinate systems such as the usual RA-DEC celestial coordinates, ALT-AZ coordinates and specific angular coordinates for the mount motor controllers.
+ */
+<span class="fc" id="L18">public class CoordTransformer {</span>
+
+    public static final double ONE_RA_HOUR_IN_DEGREES = 15.0;
+    public static final double ONE_DEG_IN_HOURS = 24.0 / 360;
+<span class="fc" id="L22">    private static final Logger LOGGER = LoggerFactory.getLogger(CoordTransformer.class);</span>
+    private static final Calendar j2000;
+
+    static {
+<span class="fc" id="L26">        j2000 = Calendar.getInstance(TimeZone.getTimeZone(&quot;UTC&quot;));</span>
+<span class="fc" id="L27">        j2000.set(Calendar.YEAR, 2000);</span>
+<span class="fc" id="L28">        j2000.set(Calendar.MONTH, Calendar.JANUARY);</span>
+<span class="fc" id="L29">        j2000.set(Calendar.DAY_OF_MONTH, 1);</span>
+<span class="fc" id="L30">        j2000.set(Calendar.HOUR_OF_DAY, 12);</span>
+<span class="fc" id="L31">        j2000.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L32">    }</span>
+
+    /**
+     * Populate the alt-az values for a given RA/DEC contained in the passed target for the passed mount's location.
+     * This esentially transforms RA DEC coordinates to ALT AZ for a location and time.
+     * Based on http://www.stargazing.net/kepler/altaz.html#twig02a
+     *
+     * @param mount
+     */
+    public void populateAltAzFromRaDec(Mount mount) {
+<span class="fc" id="L42">        Calendar cal = mount.getCalendarProvider().provide();</span>
+<span class="fc" id="L43">        Calendar utc = convertCalendarToUtcCalendar(cal);</span>
+<span class="fc" id="L44">        double raDegrees = convertRaHoursToDeg(mount.getRaHours());</span>
+<span class="fc" id="L45">        double decDegrees = mount.getDecDegrees();</span>
+<span class="fc" id="L46">        double lst = localSiderealTime(utc, mount.getLongitude());</span>
+<span class="fc" id="L47">        double hourAngle = ((lst - raDegrees) + 360) % 360;</span>
+<span class="fc" id="L48">        double x = Math.cos(hourAngle * (PI / 180)) * Math.cos(decDegrees * (PI / 180));</span>
+<span class="fc" id="L49">        double y = Math.sin(hourAngle * (PI / 180)) * Math.cos(decDegrees * (PI / 180));</span>
+<span class="fc" id="L50">        double z = Math.sin(decDegrees * (PI / 180));</span>
+
+<span class="fc" id="L52">        double xhor = x * Math.cos((90 - mount.getLatitude()) * (PI / 180)) - z * Math.sin((90 - mount.getLatitude()) * (PI / 180));</span>
+<span class="fc" id="L53">        double yhor = y;</span>
+<span class="fc" id="L54">        double zhor = x * Math.sin((90 - mount.getLatitude()) * (PI / 180)) + z * Math.cos((90 - mount.getLatitude()) * (PI / 180));</span>
+
+<span class="fc" id="L56">        double az = Math.atan2(yhor, xhor) * (180 / PI) + 180;</span>
+<span class="fc" id="L57">        double alt = asin(zhor) * (180 / PI);</span>
+
+<span class="fc" id="L59">        mount.setAlt(alt);</span>
+<span class="fc" id="L60">        mount.setAz(az);</span>
+<span class="fc" id="L61">    }</span>
+
+    /**
+     * Build a {@link Target} from nexstar alt-az angles when in EQ-north mode.
+     * Esentially this is when the mount is being used on a wedge/polar aligned.
+     * The actual RA is calculated based on the local sidereal time and how far the mount is from the meridian.
+     * The actual DEC is taken as is. Assuming the mount is polar aligned the altitude angle will correspond to DEC
+     * &lt;p&gt;
+     *
+     * @param calendar
+     * @param lon
+     * @param nexstarAzimuth The angle from the azimuth axis. This is basically the RA axis. 180deg on this axis is the meridian.
+     * @param nexstarAlt     The angle from the nexstar alt axis. This should correspond to DEC when in eq-north mode.
+     * @return
+     */
+    public Target buildTargetFromNexstarEqNorth(Calendar calendar, double lon, double nexstarAzimuth, double nexstarAlt) {
+<span class="fc" id="L77">        Calendar utc = convertCalendarToUtcCalendar(calendar);</span>
+<span class="fc" id="L78">        double lst = localSiderealTime(utc, lon);</span>
+<span class="fc" id="L79">        double meridianOffset = (nexstarAzimuth - 180) * -1;</span>
+<span class="fc" id="L80">        LOGGER.debug(&quot;RA from nexstar mount az azis={}, meridianOffset={}&quot;, nexstarAzimuth, meridianOffset);</span>
+<span class="fc" id="L81">        Target target = new Target((((lst + meridianOffset) + 360) % 360), nexstarAlt, 0.0, 0.0);</span>
+<span class="fc" id="L82">        LOGGER.debug(&quot;radeg {}&quot;, target.getRaDeg());</span>
+<span class="fc" id="L83">        target.setRaHours(convertRaDegToHours(target.getRaDeg()));</span>
+<span class="fc" id="L84">        return target;</span>
+    }
+
+    /**
+     * Return the local sidereal time for the Calender and location longitude passed
+     *
+     * @param utc
+     * @param longitude
+     * @return
+     */
+    public double localSiderealTime(Calendar utc, double longitude) {
+<span class="fc" id="L95">        LOGGER.debug(&quot;LON {} &quot;, longitude);</span>
+<span class="fc" id="L96">        double dayOffset = (utc.getTimeInMillis() - j2000.getTimeInMillis()) / 1000.0 / 60.0 / 60.0 / 24.0;</span>
+<span class="fc" id="L97">        double time = (utc.get(Calendar.HOUR_OF_DAY) + utc.get(Calendar.MINUTE) / 60d);</span>
+<span class="fc" id="L98">        double lst = ((100.46 + 0.985647 * dayOffset + longitude + 15 * time) + 360) % 360;</span>
+<span class="fc" id="L99">        LOGGER.debug(&quot;Local sidereal time deg: {} hours: {}&quot;, lst, convertRaDegToHours(lst));</span>
+<span class="fc" id="L100">        return lst;</span>
+    }
+
+    /**
+     * Convert right ascention from UOM hours to deg.
+     *
+     * @param raHours
+     * @return
+     */
+    public double convertRaHoursToDeg(Double raHours) {
+<span class="fc" id="L110">        return raHours * ONE_RA_HOUR_IN_DEGREES;</span>
+    }
+
+    /**
+     * Convert an RA angle in degrees (not hours) to an azimuth axis angle for the mount. This angle needs the current time and earth location (longitude)
+     *
+     * @param calendar
+     * @param lon
+     * @param raDeg right ascention measured in degrees.
+     * @return
+     */
+    public double convertRaFromDegToNexstarAzimuthAngle(Calendar calendar, double lon, double raDeg) {
+<span class="fc" id="L122">        Calendar utc = convertCalendarToUtcCalendar(calendar);</span>
+<span class="fc" id="L123">        double lst = localSiderealTime(utc, lon);</span>
+<span class="fc" id="L124">        double meridianOffset = (raDeg - lst) * -1;</span>
+<span class="fc" id="L125">        return 180 + meridianOffset;</span>
+    }
+
+    /**
+     * For EQ north mounted telescopes. 0 deg altitude corresponds to the celestial equator. 90 the pole.
+     * Similar to latitude on earth. Anything past 90deg is beyond the pole and down the other side...
+     * Convert all angles outside of the +-90 range to be between +-90deg
+     * Example 355deg would be -5deg. 91deg would be 89.
+     *
+     * @param positionAngle the angle reported from the motor controller
+     * @return the declinataion angle
+     */
+    public double convertAltPositionAngleToDecForEqNorth(double positionAngle) {
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (positionAngle &gt; 180) {</span>
+<span class="fc" id="L139">            positionAngle = 180 - (positionAngle - 180);</span>
+<span class="fc" id="L140">            positionAngle = positionAngle * -1;</span>
+        }
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (positionAngle &gt; 90) {</span>
+<span class="fc" id="L143">            positionAngle = 90 - (positionAngle - 90);</span>
+        }
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (positionAngle &lt; -90) {</span>
+<span class="fc" id="L146">            positionAngle = -90 - (positionAngle + 90);</span>
+        }
+<span class="fc" id="L148">        return positionAngle;</span>
+    }
+
+    /**
+     * For EQ north mounted telescopes. 0 deg altitude corresponds to the celestial equator. 90 the pole.
+     * Similar to latitude on earth. Anything past 90deg is beyond the pole and down the other side...
+     * This will convert an RA to the telescope ALT angle when in EQ north. For example, DEC -5deg = 355deg
+     *
+     * @param dec the declination angle in degrees
+     * @return the converted declinationAngle
+     */
+    public double convertDecToPositionAngleForEqNorth(double dec) {
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        if (dec &lt; 0) {</span>
+<span class="fc" id="L161">            dec = 360 + dec;</span>
+        }
+<span class="fc" id="L163">        return dec;</span>
+    }
+
+    /**
+     * Convert a Calendar to UTC
+     * @param calendar
+     * @return
+     */
+    private static Calendar convertCalendarToUtcCalendar(Calendar calendar) {
+<span class="fc" id="L172">        final Calendar utc = new GregorianCalendar(TimeZone.getTimeZone(&quot;UTC&quot;));</span>
+<span class="fc" id="L173">        utc.setTimeInMillis(calendar.getTimeInMillis());</span>
+<span class="fc" id="L174">        return utc;</span>
+    }
+
+    /**
+     * Convert right ascention from UOM degrees to hours.
+     *
+     * @param ra
+     * @return
+     */
+    private double convertRaDegToHours(Double ra) {
+<span class="fc" id="L184">        return ra / ONE_RA_HOUR_IN_DEGREES;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>

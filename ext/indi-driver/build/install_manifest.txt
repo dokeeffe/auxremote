@@ -1,0 +1,2 @@
+/usr/bin/indi_auxremote
+/usr/share/indi/indi_auxremote.xml

@@ -1,14 +1,8 @@
 package com.bobs.io;
 
-import com.bobs.mount.Axis;
-import com.bobs.mount.Mount;
-import com.bobs.mount.PecMode;
-import com.bobs.mount.TrackingState;
-import com.bobs.serialcommands.Move;
-import com.bobs.serialcommands.PecPlayback;
-import com.bobs.serialcommands.PecQueryAtIndex;
-import com.bobs.serialcommands.PecQueryRecordDone;
-import com.bobs.serialcommands.QuerySlewDone;
+import com.bobs.coord.DefaultCalendarProvider;
+import com.bobs.mount.*;
+import com.bobs.serialcommands.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +21,10 @@ public class FakeNexstarAuxAdapterTest {
     @Before
     public void setUp() throws Exception {
         mount = new Mount();
+        mount.setTrackingMode(TrackingMode.EQ_NORTH);
+        mount.setCalendarProvider(new DefaultCalendarProvider());
+        mount.setLongitude(351.0);
+        mount.setLatitude(52.0);
         sut = new FakeNexstarAuxAdapter();
         new Thread(sut).start();
     }
@@ -72,6 +70,33 @@ public class FakeNexstarAuxAdapterTest {
         sut.queueCommand(cmd);
         sut.waitForQueueEmpty();
         assertEquals(PecMode.IDLE, mount.getPecMode());
+    }
+
+    @Test
+    public void syncAndCheckPosition() {
+        sut.queueCommand(new SetAltMcPosition(mount,10.00));
+        sut.queueCommand(new SetAzMcPosition(mount,180.00));
+        sut.queueCommand(new QueryAltMcPosition(mount));
+        sut.queueCommand(new QueryAzMcPosition(mount));
+        sut.waitForQueueEmpty();
+        assertNotEquals(0.0,mount.getRaHours(),0.1);
+        assertNotEquals(0.0,mount.getDecDegrees(),0.1);
+    }
+
+    @Test
+    public void gotoAndCheckPosition() throws InterruptedException {
+        sut.queueCommand(new Goto(mount,10.00,Axis.ALT,true));
+        sut.queueCommand(new Goto(mount,180.00,Axis.AZ, true));
+        mount.setAltSlewInProgress(true);
+        while(mount.isSlewing()) {
+            sut.queueCommand(new QuerySlewDone(mount,Axis.ALT));
+            Thread.sleep(100);
+        }
+        sut.queueCommand(new QueryAltMcPosition(mount));
+        sut.queueCommand(new QueryAzMcPosition(mount));
+        sut.waitForQueueEmpty();
+        assertNotEquals(0.0,mount.getRaHours(),0.1);
+        assertNotEquals(0.0,mount.getDecDegrees(),0.1);
     }
 
     @Test

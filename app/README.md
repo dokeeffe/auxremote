@@ -5,7 +5,6 @@ It offers high level functionallity to clients through an HTTP api.
 The primary comsumer of this API is the INDI driver although a very basic javascript application is also provided.
 
 ### TODO: 
-.  Slew limits
 .  Bug fix when used with ekos scheduler then slew never returns (possible driver problem)
 .  GOTO and SYNC added to HTML app
 .  Implement ALTAZ and EQ-SOUTH tracking. Currently only EQ-NORTH is supported

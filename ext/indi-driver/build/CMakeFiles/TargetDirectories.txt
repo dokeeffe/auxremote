@@ -1,0 +1,7 @@
+/home/dokeeffe/code/github/auxremote/ext/indi-driver/build/CMakeFiles/install.dir
+/home/dokeeffe/code/github/auxremote/ext/indi-driver/build/CMakeFiles/list_install_components.dir
+/home/dokeeffe/code/github/auxremote/ext/indi-driver/build/CMakeFiles/rebuild_cache.dir
+/home/dokeeffe/code/github/auxremote/ext/indi-driver/build/CMakeFiles/indi_auxremote.dir
+/home/dokeeffe/code/github/auxremote/ext/indi-driver/build/CMakeFiles/install/local.dir
+/home/dokeeffe/code/github/auxremote/ext/indi-driver/build/CMakeFiles/install/strip.dir
+/home/dokeeffe/code/github/auxremote/ext/indi-driver/build/CMakeFiles/edit_cache.dir

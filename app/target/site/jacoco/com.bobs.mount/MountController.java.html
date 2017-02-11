@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MountController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auxremote</a> &gt; <a href="index.source.html" class="el_package">com.bobs.mount</a> &gt; <span class="el_source">MountController.java</span></div><h1>MountController.java</h1><pre class="source lang-java linenums">package com.bobs.mount;
+
+import com.bobs.coord.Target;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * A Web controller responsible for exposing an HTTP api and delegating to the {@link MountService}
+ */
+@RestController
+@RequestMapping(&quot;/api/mount&quot;)
+<span class="fc" id="L14">public class MountController {</span>
+
+<span class="fc" id="L16">    private static final Logger LOGGER = LoggerFactory.getLogger(MountController.class);</span>
+
+    /**
+     * Service bean to handle the mounts state.
+     */
+    @Autowired
+    private MountService mountService;
+
+    /**
+     * GET the {@link Mount}s current state.
+     * FIXME: on not connected return somethnig other than 500
+     * @return
+     */
+    @GetMapping(&quot;&quot;)
+    public Mount mount() {
+<span class="fc" id="L31">        return mountService.getMount();</span>
+    }
+
+    @PostMapping(&quot;&quot;)
+    public Mount updateMount(@RequestBody Mount mount) {
+<span class="fc" id="L36">        LOGGER.info(&quot;Updating Mount&quot;);</span>
+<span class="fc" id="L37">        mountService.updateMount(mount);</span>
+<span class="fc" id="L38">        return mount;</span>
+    }
+
+
+    /**
+     * Handle POST to connect. This will delegate to the service to connect to the mount over serial and query state.
+     *
+     * @return
+     */
+    @PostMapping(&quot;/connect&quot;)
+    public boolean connect() {
+<span class="fc" id="L49">        LOGGER.info(&quot;CONNECTING&quot;);</span>
+<span class="fc" id="L50">        return mountService.connect();</span>
+    }
+
+    /**
+     * Handle the POST for a Target.
+     * There are 6 types of Target. Delegate to the appropriate service method.
+     * NOTE: Some of these are blocking and some non-blocking.
+     *
+     * @param target
+     */
+    @PostMapping(&quot;/target&quot;)
+    public void target(@RequestBody Target target) {
+<span class="fc" id="L62">        LOGGER.info(&quot;target request {} {}&quot;, target.getType(), target.getMotion());</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (&quot;park&quot;.equals(target.getType())) {</span>
+<span class="fc" id="L64">            mountService.park(target);</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        } else if (&quot;unpark&quot;.equals(target.getType())) {</span>
+<span class="fc" id="L66">            mountService.unpark(target);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        } else if (&quot;move&quot;.equals(target.getType())) {</span>
+<span class="fc" id="L68">            mountService.moveAxis(target);</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        } else if (&quot;sync&quot;.equals(target.getType())) {</span>
+<span class="fc" id="L70">            mountService.sync(target);</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        } else if (&quot;slew&quot;.equals(target.getType())) {</span>
+<span class="fc" id="L72">            mountService.slew(target, false);</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        } else if (&quot;guide&quot;.equals(target.getType())) {</span>
+<span class="fc" id="L74">            mountService.guide(target);</span>
+        }
+<span class="fc" id="L76">    }</span>
+
+    /**
+     * Set the mount service.
+     *
+     * @param mountService
+     */
+    public void setMountService(MountService mountService) {
+<span class="fc" id="L84">        this.mountService = mountService;</span>
+<span class="fc" id="L85">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>

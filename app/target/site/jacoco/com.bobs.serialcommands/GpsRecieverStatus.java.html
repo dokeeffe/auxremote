@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GpsRecieverStatus.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auxremote</a> &gt; <a href="index.source.html" class="el_package">com.bobs.serialcommands</a> &gt; <span class="el_source">GpsRecieverStatus.java</span></div><h1>GpsRecieverStatus.java</h1><pre class="source lang-java linenums">package com.bobs.serialcommands;
+
+import com.bobs.mount.Mount;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.xml.bind.DatatypeConverter;
+
+/**
+ * Build a command to send to the GPS module to query status.
+ */
+public class GpsRecieverStatus extends MountCommand {
+
+    public static final byte MESSAGE_LENGTH = 0x01;
+    public static final byte RESPONSE_LENGTH = 0x02;
+<span class="fc" id="L16">    private static final Logger LOGGER = LoggerFactory.getLogger(GpsRecieverStatus.class);</span>
+
+    public GpsRecieverStatus(Mount mount) {
+<span class="fc" id="L19">        super(mount);</span>
+<span class="fc" id="L20">    }</span>
+
+    @Override
+    public byte[] getCommand() {
+<span class="fc" id="L24">        byte result[] = new byte[8];</span>
+<span class="fc" id="L25">        result[0] = MC_HC_AUX_COMMAND_PREFIX;</span>
+<span class="fc" id="L26">        result[1] = MESSAGE_LENGTH;</span>
+<span class="fc" id="L27">        result[2] = GPS;</span>
+<span class="fc" id="L28">        result[3] = GPS_REC_STATUS;</span>
+<span class="fc" id="L29">        result[4] = 0x00;</span>
+<span class="fc" id="L30">        result[5] = 0x00;</span>
+<span class="fc" id="L31">        result[6] = 0x00;</span>
+<span class="fc" id="L32">        result[7] = RESPONSE_LENGTH;</span>
+<span class="fc" id="L33">        return result;</span>
+    }
+
+    @Override
+    public void handleMessage(byte[] message) {
+<span class="fc" id="L38">        String hex = DatatypeConverter.printHexBinary(message);</span>
+<span class="fc" id="L39">        LOGGER.debug(&quot;GPS STATUS: {}&quot;, hex);</span>
+<span class="fc" id="L40">        int i = Integer.parseInt(hex, 16);</span>
+<span class="fc" id="L41">        String bits = String.format(&quot;%8s&quot;, Integer.toBinaryString(0x10000 | i)).substring(1);</span>
+<span class="fc" id="L42">        LOGGER.debug(&quot;********   GPS STATUS BITS: {}&quot;, bits);</span>
+<span class="fc" id="L43">        String bit1513 = bits.substring(12, 15);</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (bits.substring(12, 15).equals(&quot;110&quot;)) {</span>
+<span class="nc" id="L45">            mount.setGpsReceiverStatus(&quot;Acquiring Satellites&quot;);</span>
+        }
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">        if (bits.substring(7, 8).equals(&quot;1&quot;)) {</span>
+<span class="fc" id="L48">            mount.setGpsReceiverStatus(&quot;Filter Reset To Raw GPS Solution&quot;);</span>
+        }
+<span class="fc" id="L50">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>

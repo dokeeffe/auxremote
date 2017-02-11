@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NexstarAuxSerialAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auxremote</a> &gt; <a href="index.source.html" class="el_package">com.bobs.io</a> &gt; <span class="el_source">NexstarAuxSerialAdapter.java</span></div><h1>NexstarAuxSerialAdapter.java</h1><pre class="source lang-java linenums">package com.bobs.io;
+
+import com.bobs.serialcommands.MountCommand;
+import jssc.SerialPort;
+import jssc.SerialPortException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PreDestroy;
+import javax.xml.bind.DatatypeConverter;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Low level IO adapter class responsible for serial communication with the mount by means of {@link MountCommand} objects.
+ * Since serial communication is a non blocking IO, Java {@link BlockingQueue}s are used as message channels to ensure the ordering of the messages being sent to the mount and response messages being read from the mount.
+ */
+//@Component
+<span class="fc" id="L21">public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {</span>
+
+    /**
+     * Max number of seconds to wait for a response message after sending a command message to the mount.
+     */
+    private static final int RESPONSE_TIMEOUT_SEC = 10;
+<span class="fc" id="L27">    Logger LOGGER = LoggerFactory.getLogger(NexstarAuxSerialAdapter.class);</span>
+
+    @Autowired
+    private SerialPortBuilder serialPortBuilder;
+
+    /**
+     * The SerialPort used to send and receive bytes to/from.
+     */
+    private SerialPort serialPort;
+
+    /**
+     * Channels are defined to sequence messages and order the responses.
+     */
+<span class="fc" id="L40">    private BlockingQueue&lt;MountCommand&gt; inputChannel = new LinkedBlockingQueue&lt;&gt;(10);</span>
+<span class="fc" id="L41">    private BlockingQueue&lt;byte[]&gt; outputChannel = new LinkedBlockingQueue&lt;&gt;(10);</span>
+    private boolean connected;
+    private String serialPortName;
+
+    /**
+     * Queue a serial command. Serial commands are only issued in series (one after another)
+     * The {@link MountCommand} passed is also responsible for handling the logic related to the serial message that gets returned from the mount.
+     *
+     * @param command
+     */
+    @Override
+    public void queueCommand(MountCommand command) {
+<span class="pc bpc" id="L53" title="1 of 4 branches missed.">        if (serialPort != null &amp;&amp; serialPort.isOpened()) {</span>
+<span class="fc" id="L54">            this.inputChannel.add(command);</span>
+        } else {
+<span class="fc" id="L56">            throw new IllegalStateException(&quot;Cannot send messages when not connected&quot;);</span>
+        }
+<span class="fc" id="L58">    }</span>
+
+
+    /**
+     * Start this adapter. This normally needs to start in a new thread.
+     */
+    @Override
+    public void start() {
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if(this.serialPortName==null) {</span>
+<span class="nc" id="L67">            throw new IllegalStateException(&quot;Cannot connect when serial port not set&quot;);</span>
+        }
+<span class="fc" id="L69">        LOGGER.debug(&quot;Starting adapter for {}&quot;, serialPortName);</span>
+<span class="fc" id="L70">        this.serialPort = serialPortBuilder.buildSerialPortForHandset(serialPortName);</span>
+<span class="fc" id="L71">        connected = true;</span>
+        try {
+<span class="fc" id="L73">            serialPort.addEventListener(new AuxSerialPortEventListener(serialPort, outputChannel));</span>
+<span class="nc" id="L74">        } catch (SerialPortException e) {</span>
+<span class="nc" id="L75">            LOGGER.error(&quot;Error adding event listner port&quot;, e);</span>
+<span class="fc" id="L76">        }</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        while (connected) {</span>
+            try {
+<span class="fc" id="L79">                MountCommand command = inputChannel.poll(100, TimeUnit.DAYS);</span>
+<span class="fc" id="L80">                byte[] cmd = command.getCommand();</span>
+<span class="fc" id="L81">                LOGGER.debug(&quot;Sending {} message to mount {}&quot;, command.getClass().getName(), DatatypeConverter.printHexBinary(cmd));</span>
+<span class="fc" id="L82">                serialPort.writeBytes(cmd);</span>
+<span class="fc" id="L83">                byte[] response1 = outputChannel.poll(RESPONSE_TIMEOUT_SEC, TimeUnit.SECONDS);</span>
+<span class="pc bpc" id="L84" title="1 of 4 branches missed.">                if (response1 == null || response1.length == 0) {</span>
+<span class="fc" id="L85">                    LOGGER.error(&quot;Comms error, invalid response from mount {} or timed out waiting&quot;, response1);</span>
+                } else {
+                    try {
+<span class="fc" id="L88">                        LOGGER.debug(&quot;Processing response from mount&quot;);</span>
+<span class="fc" id="L89">                        command.handleMessage(response1);</span>
+<span class="nc" id="L90">                    } catch (Exception ex) {</span>
+                        //Catch all to avoid killing this message processing thread.
+<span class="nc" id="L92">                        LOGGER.error(&quot;Fatal error processing response. Continuing to Process messages&quot;, ex);</span>
+<span class="fc" id="L93">                    }</span>
+                }
+<span class="nc" id="L95">            } catch (SerialPortException e) {</span>
+<span class="nc" id="L96">                LOGGER.error(&quot;Fatal Serial Port Exception processing response&quot;, e);</span>
+<span class="nc" id="L97">            } catch (InterruptedException e) {</span>
+<span class="nc" id="L98">                LOGGER.error(&quot;Polling interrupted&quot;, e);</span>
+<span class="pc" id="L99">            }</span>
+        }
+<span class="nc" id="L101">    }</span>
+
+    /**
+     * Cleanup on finish. Close the port and set to not connected.
+     *
+     * @throws SerialPortException
+     */
+    @Override
+    @PreDestroy
+    public void stop() throws SerialPortException {
+<span class="fc" id="L111">        connected = false;</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if(serialPort!=null) {</span>
+<span class="fc" id="L113">            serialPort.closePort();</span>
+        }
+<span class="fc" id="L115">    }</span>
+
+    @Override
+    public void waitForQueueEmpty() {
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        while (!this.inputChannel.isEmpty()) {</span>
+            try {
+<span class="nc" id="L121">                Thread.sleep(200);</span>
+<span class="nc" id="L122">            } catch (InterruptedException e) {</span>
+<span class="nc" id="L123">                LOGGER.warn(&quot;Sleep interrupted&quot;);</span>
+<span class="nc" id="L124">            }</span>
+        }
+<span class="fc" id="L126">    }</span>
+
+    @Override
+    public boolean isConnected() {
+<span class="fc" id="L130">        return connected;</span>
+    }
+
+    @Override
+    public void run() {
+<span class="nc" id="L135">        this.start();</span>
+<span class="nc" id="L136">    }</span>
+
+    /**
+     * Set the serialPortBuilder.
+     *
+     * @param serialPortBuilder
+     */
+    public void setSerialPortBuilder(SerialPortBuilder serialPortBuilder) {
+<span class="fc" id="L144">        this.serialPortBuilder = serialPortBuilder;</span>
+<span class="fc" id="L145">    }</span>
+
+    /**
+     * Set the name of the port to use.
+     *
+     * @param serialPortName
+     */
+    @Override
+    public void setSerialPortName(String serialPortName) {
+<span class="fc" id="L154">        this.serialPortName = serialPortName;</span>
+<span class="fc" id="L155">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>

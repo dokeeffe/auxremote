@@ -40,8 +40,8 @@ protected:
   virtual IPState GuideEast(float ms);
   virtual IPState GuideWest(float ms);
 
-  virtual bool Park();
-  virtual bool UnPark();
+  bool Park();
+  bool UnPark();
   virtual void SetCurrentPark();
   virtual void SetDefaultPark();
 

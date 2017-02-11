@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Mount.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auxremote</a> &gt; <a href="index.source.html" class="el_package">com.bobs.mount</a> &gt; <span class="el_source">Mount.java</span></div><h1>Mount.java</h1><pre class="source lang-java linenums">package com.bobs.mount;
+
+import com.bobs.coord.CalendarProvider;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Date;
+
+/**
+ * Basic bean responsible for storing the state of the actual physical mount.
+ * This is a Singleton bean, there is only one instance in the application.
+ * This bean is managed by the {@link MountService}
+ * The bean is serialised when the application shuts down and de-serialised on startup.
+ * &lt;p&gt;
+ * TODO: cleanup mess of objects and primitives used
+ */
+@Component
+<span class="fc" id="L27">public class Mount {</span>
+
+    public static final String PERSISTANCE_STORE = &quot;auxremote-mount.json&quot;;
+<span class="fc" id="L30">    private static final Logger LOGGER = LoggerFactory.getLogger(Mount.class);</span>
+    private static final long ONE_HOUR = 1000 * 60 * 60;
+<span class="fc" id="L32">    private static final Double DEFAULT_ALT_SLEW_LIMIT = -10.0;</span>
+    private String version;
+    private TrackingState trackingState;
+<span class="fc" id="L35">    private Double raHours = 0.0;</span>
+<span class="fc" id="L36">    private Double decDegrees = 90.0;</span>
+    private TrackingMode trackingMode;
+    private Double latitude;
+    private Double longitude;
+    private boolean gpsConnected;
+    private Date gpsUpdateTime;
+    private String gpsReceiverStatus;
+<span class="fc" id="L43">    private Double slewLimitAlt = DEFAULT_ALT_SLEW_LIMIT;</span>
+    private Double slewLimitAz;
+<span class="fc" id="L45">    private boolean locationSet = false;</span>
+<span class="fc" id="L46">    private boolean altSlewInProgress = false;</span>
+<span class="fc" id="L47">    private boolean azSlewInProgress = false;</span>
+<span class="fc" id="L48">    private boolean aligned = false;</span>
+    private boolean cordWrapEnabled;
+    private String serialPort;
+    private PecMode pecMode;
+<span class="fc" id="L52">    private boolean pecIndexFound = false;</span>
+    private String error;
+    private GuideRate guideRate;
+    private double cordWrapPosition;
+    private String statusMessage;
+    private Double alt;
+    private Double az;
+
+    @Autowired
+    private CalendarProvider calendarProvider;
+
+
+    /**
+     * On app startup, set defaults, and if possible load a previously persisted state.
+     */
+    @PostConstruct
+    public void loadState() {
+<span class="fc" id="L69">        setDefaults();</span>
+<span class="fc" id="L70">        loadPersistedState(new File(System.getProperty(&quot;user.home&quot;), PERSISTANCE_STORE));</span>
+<span class="fc" id="L71">    }</span>
+
+    /**
+     * Load previously persisted mount state. Only a subset of properties are loaded
+     *
+     * @param json
+     */
+    protected void loadPersistedState(File json) {
+<span class="fc" id="L79">        ObjectMapper om = new ObjectMapper();</span>
+        try {
+<span class="fc" id="L81">            Mount persisted = om.readValue(json, Mount.class);</span>
+<span class="fc" id="L82">            this.latitude = persisted.getLatitude();</span>
+<span class="fc" id="L83">            this.longitude = persisted.getLongitude();</span>
+<span class="fc" id="L84">            this.locationSet = persisted.isLocationSet();</span>
+<span class="fc" id="L85">            this.serialPort = persisted.getSerialPort();</span>
+<span class="fc" id="L86">            this.trackingState = persisted.getTrackingState();</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">            if (persisted.getTrackingState() == TrackingState.TRACKING) {</span>
+<span class="fc" id="L88">                LOGGER.info(&quot;restoring persisted RA DEC posistion from mount. This may not be the actual mount position&quot;);</span>
+<span class="fc" id="L89">                this.raHours = persisted.getRaHours();</span>
+<span class="fc" id="L90">                this.decDegrees = persisted.getDecDegrees();</span>
+<span class="fc" id="L91">                this.aligned = persisted.isAligned();</span>
+            }
+<span class="fc" id="L93">        } catch (Exception e) {</span>
+<span class="fc" id="L94">            LOGGER.warn(&quot;Could not load saved state, using defaults&quot;, e);</span>
+<span class="fc" id="L95">        }</span>
+
+<span class="fc" id="L97">    }</span>
+
+    /**
+     * Set some defaults
+     */
+    private void setDefaults() {
+<span class="fc" id="L103">        this.trackingState = TrackingState.IDLE;</span>
+<span class="fc" id="L104">        this.guideRate = GuideRate.SIDEREAL;</span>
+<span class="fc" id="L105">        this.trackingMode = TrackingMode.EQ_NORTH; //currently the only one supported. Once others are developed then this will be loaded from persisted</span>
+<span class="fc" id="L106">        this.setPecMode(PecMode.IDLE);</span>
+<span class="fc" id="L107">    }</span>
+
+    @PreDestroy
+    public void saveState() {
+<span class="fc" id="L111">        ObjectMapper om = new ObjectMapper();</span>
+        try {
+<span class="fc" id="L113">            om.writeValue(new FileOutputStream(new File(System.getProperty(&quot;user.home&quot;), PERSISTANCE_STORE)), this);</span>
+<span class="nc" id="L114">        } catch (IOException e) {</span>
+<span class="nc" id="L115">            LOGGER.warn(&quot;error saving mount state&quot;, e);</span>
+<span class="fc" id="L116">        }</span>
+
+<span class="fc" id="L118">    }</span>
+
+    public String getVersion() {
+<span class="fc" id="L121">        return version;</span>
+    }
+
+    public void setVersion(String version) {
+<span class="fc" id="L125">        this.version = version;</span>
+<span class="fc" id="L126">    }</span>
+
+    public Double getRaHours() {
+<span class="fc" id="L129">        return raHours;</span>
+    }
+
+    public void setRaHours(Double raHours) {
+<span class="fc" id="L133">        this.raHours = raHours;</span>
+<span class="fc" id="L134">    }</span>
+
+    public Double getDecDegrees() {
+<span class="fc" id="L137">        return decDegrees;</span>
+    }
+
+    public void setDecDegrees(Double decDegrees) {
+<span class="fc" id="L141">        this.decDegrees = decDegrees;</span>
+<span class="fc" id="L142">    }</span>
+
+    public TrackingMode getTrackingMode() {
+<span class="fc" id="L145">        return trackingMode;</span>
+    }
+
+    public void setTrackingMode(TrackingMode trackingMode) {
+<span class="fc" id="L149">        this.trackingMode = trackingMode;</span>
+<span class="fc" id="L150">    }</span>
+
+    public Double getLatitude() {
+<span class="fc" id="L153">        return latitude;</span>
+    }
+
+    public void setLatitude(Double latitude) {
+<span class="fc" id="L157">        this.latitude = latitude;</span>
+<span class="fc" id="L158">    }</span>
+
+    public Double getLongitude() {
+<span class="fc" id="L161">        return longitude;</span>
+    }
+
+    public void setLongitude(Double longitude) {
+<span class="fc" id="L165">        this.longitude = longitude;</span>
+<span class="fc" id="L166">    }</span>
+
+    public boolean isGpsConnected() {
+<span class="fc" id="L169">        return gpsConnected;</span>
+    }
+
+    public void setGpsConnected(boolean gpsConnected) {
+<span class="fc" id="L173">        this.gpsConnected = gpsConnected;</span>
+<span class="fc" id="L174">    }</span>
+
+    public Date getGpsUpdateTime() {
+<span class="fc" id="L177">        return gpsUpdateTime;</span>
+    }
+
+    public void setGpsUpdateTime(Date gpsUpdateTime) {
+<span class="fc" id="L181">        this.gpsUpdateTime = gpsUpdateTime;</span>
+<span class="fc" id="L182">    }</span>
+
+    public String getGpsReceiverStatus() {
+<span class="fc" id="L185">        return gpsReceiverStatus;</span>
+    }
+
+    public void setGpsReceiverStatus(String gpsReceiverStatus) {
+<span class="fc" id="L189">        this.gpsReceiverStatus = gpsReceiverStatus;</span>
+<span class="fc" id="L190">    }</span>
+
+    public Double getSlewLimitAlt() {
+<span class="fc" id="L193">        return slewLimitAlt;</span>
+    }
+
+    public void setSlewLimitAlt(Double slewLimitAlt) {
+<span class="fc" id="L197">        this.slewLimitAlt = slewLimitAlt;</span>
+<span class="fc" id="L198">    }</span>
+
+    public Double getSlewLimitAz() {
+<span class="fc" id="L201">        return slewLimitAz;</span>
+    }
+
+    public void setSlewLimitAz(Double slewLimitAz) {
+<span class="fc" id="L205">        this.slewLimitAz = slewLimitAz;</span>
+<span class="fc" id="L206">    }</span>
+
+    public boolean isLocationSet() {
+<span class="fc" id="L209">        return locationSet;</span>
+    }
+
+    public void setLocationSet(boolean locationSet) {
+<span class="fc" id="L213">        this.locationSet = locationSet;</span>
+<span class="fc" id="L214">    }</span>
+
+    public boolean isAltSlewInProgress() {
+<span class="fc" id="L217">        return altSlewInProgress;</span>
+    }
+
+    public void setAltSlewInProgress(boolean altSlewInProgress) {
+<span class="fc" id="L221">        this.altSlewInProgress = altSlewInProgress;</span>
+<span class="fc" id="L222">    }</span>
+
+    public boolean isAzSlewInProgress() {
+<span class="fc" id="L225">        return azSlewInProgress;</span>
+    }
+
+    public void setAzSlewInProgress(boolean azSlewInProgress) {
+<span class="fc" id="L229">        this.azSlewInProgress = azSlewInProgress;</span>
+<span class="fc" id="L230">    }</span>
+
+    public TrackingState getTrackingState() {
+<span class="fc" id="L233">        return trackingState;</span>
+    }
+
+    public void setTrackingState(TrackingState trackingState) {
+<span class="fc" id="L237">        this.trackingState = trackingState;</span>
+<span class="fc" id="L238">    }</span>
+
+    public boolean isAligned() {
+<span class="fc" id="L241">        return aligned;</span>
+    }
+
+    public void setAligned(boolean aligned) {
+<span class="fc" id="L245">        this.aligned = aligned;</span>
+<span class="fc" id="L246">    }</span>
+
+    public boolean isCordWrapEnabled() {
+<span class="fc" id="L249">        return cordWrapEnabled;</span>
+    }
+
+    public void setCordWrapEnabled(boolean cordWrapEnabled) {
+<span class="fc" id="L253">        this.cordWrapEnabled = cordWrapEnabled;</span>
+<span class="fc" id="L254">    }</span>
+
+    public String getSerialPort() {
+<span class="fc" id="L257">        return serialPort;</span>
+    }
+
+    public void setSerialPort(String serialPort) {
+<span class="fc" id="L261">        this.serialPort = serialPort;</span>
+<span class="fc" id="L262">    }</span>
+
+    public PecMode getPecMode() {
+<span class="fc" id="L265">        return pecMode;</span>
+    }
+
+    public void setPecMode(PecMode pecMode) {
+<span class="fc" id="L269">        this.pecMode = pecMode;</span>
+<span class="fc" id="L270">    }</span>
+
+    public boolean isPecIndexFound() {
+<span class="fc" id="L273">        return pecIndexFound;</span>
+    }
+
+    public void setPecIndexFound(boolean pecIndexFound) {
+<span class="fc" id="L277">        this.pecIndexFound = pecIndexFound;</span>
+<span class="fc" id="L278">    }</span>
+
+    public String getError() {
+<span class="fc" id="L281">        return error;</span>
+    }
+
+    public void setError(String error) {
+<span class="fc" id="L285">        this.error = error;</span>
+<span class="fc" id="L286">    }</span>
+
+    public GuideRate getGuideRate() {
+<span class="fc" id="L289">        return guideRate;</span>
+    }
+
+    public void setGuideRate(GuideRate guideRate) {
+<span class="fc" id="L293">        this.guideRate = guideRate;</span>
+<span class="fc" id="L294">    }</span>
+
+    public double getCordWrapPosition() {
+<span class="fc" id="L297">        return cordWrapPosition;</span>
+    }
+
+    public void setCordWrapPosition(double cordWrapPosition) {
+<span class="fc" id="L301">        this.cordWrapPosition = cordWrapPosition;</span>
+<span class="fc" id="L302">    }</span>
+
+    public String getStatusMessage() {
+<span class="fc" id="L305">        return statusMessage;</span>
+    }
+
+    public void setStatusMessage(String statusMessage) {
+<span class="fc" id="L309">        this.statusMessage = statusMessage;</span>
+<span class="fc" id="L310">    }</span>
+
+    /**
+     * Returns true if the GPS info is more than 1 hour old
+     */
+    @JsonIgnore
+    public boolean isGpsInfoOld() {
+<span class="fc bfc" id="L317" title="All 4 branches covered.">        return this.gpsUpdateTime == null || new Date().getTime() - this.getGpsUpdateTime().getTime() &gt; ONE_HOUR;</span>
+    }
+
+    @JsonIgnore
+    public boolean isSlewing() {
+<span class="pc bpc" id="L322" title="1 of 4 branches missed.">        return isAltSlewInProgress() || isAzSlewInProgress();</span>
+    }
+
+    @JsonIgnore
+    public CalendarProvider getCalendarProvider() {
+<span class="fc" id="L327">        return calendarProvider;</span>
+    }
+
+    public void setCalendarProvider(CalendarProvider calendarProvider) {
+<span class="fc" id="L331">        this.calendarProvider = calendarProvider;</span>
+<span class="fc" id="L332">    }</span>
+
+    public Double getAlt() {
+<span class="fc" id="L335">        return alt;</span>
+    }
+
+    public void setAlt(Double alt) {
+<span class="fc" id="L339">        this.alt = alt;</span>
+<span class="fc" id="L340">    }</span>
+
+    public Double getAz() {
+<span class="fc" id="L343">        return az;</span>
+    }
+
+    public void setAz(Double az) {
+<span class="fc" id="L347">        this.az = az;</span>
+<span class="fc" id="L348">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>

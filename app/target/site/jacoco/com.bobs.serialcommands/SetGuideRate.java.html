@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SetGuideRate.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auxremote</a> &gt; <a href="index.source.html" class="el_package">com.bobs.serialcommands</a> &gt; <span class="el_source">SetGuideRate.java</span></div><h1>SetGuideRate.java</h1><pre class="source lang-java linenums">package com.bobs.serialcommands;
+
+import com.bobs.mount.GuideRate;
+import com.bobs.mount.Mount;
+import com.bobs.mount.TrackingState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Created by dokeeffe on 25/12/16.
+ */
+public class SetGuideRate extends MountCommand {
+
+<span class="fc" id="L14">    private static final Logger LOGGER = LoggerFactory.getLogger(SetGuideRate.class);</span>
+    private final byte targetBoard;
+    private final GuideRate guideRate;
+
+    /**
+     * Constructor
+     *
+     * @param mount
+     * @param targetBoard
+     * @param guideRate
+     */
+    public SetGuideRate(Mount mount, byte targetBoard, GuideRate guideRate) {
+<span class="fc" id="L26">        super(mount);</span>
+<span class="fc" id="L27">        this.guideRate = guideRate;</span>
+<span class="fc" id="L28">        this.targetBoard = targetBoard;</span>
+<span class="fc" id="L29">    }</span>
+
+    @Override
+    public byte[] getCommand() {
+<span class="pc bpc" id="L33" title="1 of 4 branches missed.">        if (this.targetBoard != ALT_BOARD &amp;&amp; this.targetBoard != AZM_BOARD) {</span>
+<span class="nc" id="L34">            throw new IllegalArgumentException(&quot;Cannot send this serial queueCommand to board &quot; + this.targetBoard);</span>
+        }
+<span class="fc" id="L36">        byte result[] = new byte[8];</span>
+<span class="fc" id="L37">        result[0] = MC_HC_AUX_COMMAND_PREFIX;</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (this.guideRate == GuideRate.OFF) {</span>
+<span class="fc" id="L39">            result[1] = 0x04;</span>
+<span class="fc" id="L40">            result[4] = 0x00;</span>
+<span class="fc" id="L41">            result[5] = 0x00;</span>
+<span class="fc" id="L42">            result[6] = 0x00;</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        } else if (this.guideRate == GuideRate.SIDEREAL) {</span>
+<span class="fc" id="L44">            result[1] = 0x03;</span>
+<span class="fc" id="L45">            result[4] = (byte) 0xff;</span>
+<span class="fc" id="L46">            result[5] = (byte) 0xff;</span>
+<span class="fc" id="L47">            result[6] = 0x00;</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        } else if (this.guideRate == GuideRate.LUNAR) {</span>
+<span class="fc" id="L49">            result[1] = 0x03;</span>
+<span class="fc" id="L50">            result[4] = (byte) 0xff;</span>
+<span class="fc" id="L51">            result[5] = (byte) 0xfd;</span>
+<span class="fc" id="L52">            result[6] = 0x00;</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        } else if (this.guideRate == GuideRate.SOLAR) {</span>
+<span class="fc" id="L54">            result[1] = 0x03;</span>
+<span class="fc" id="L55">            result[4] = (byte) 0xff;</span>
+<span class="fc" id="L56">            result[5] = (byte) 0xfe;</span>
+<span class="fc" id="L57">            result[6] = 0x00;</span>
+        }
+<span class="fc" id="L59">        result[2] = this.targetBoard;</span>
+<span class="fc" id="L60">        result[3] = MC_SET_POS_GUIDERATE;</span>
+<span class="fc" id="L61">        result[7] = 0x01;</span>
+<span class="fc" id="L62">        return result;</span>
+    }
+
+    @Override
+    public void handleMessage(byte[] message) {
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (OPERATION_COMPLETE == message[0]) {</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            if (this.guideRate == GuideRate.OFF) {</span>
+<span class="fc" id="L69">                mount.setTrackingState(TrackingState.IDLE);</span>
+            } else {
+<span class="fc" id="L71">                mount.setTrackingState(TrackingState.TRACKING);</span>
+            }
+        }
+<span class="fc" id="L74">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>
