@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.bobs.io.FakeNexstarAuxAdapterTest
--------------------------------------------------------------------------------
-Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.132 sec - in com.bobs.io.FakeNexstarAuxAdapterTest
