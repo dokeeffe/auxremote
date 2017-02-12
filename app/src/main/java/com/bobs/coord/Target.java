@@ -9,8 +9,6 @@ public class Target {
     private Double raDeg;
     private Double raHours;
     private Double dec;
-    private Double alt;
-    private Double az;
     private String motion; //TODO enum for n,s,e,w,abort
     private Integer motionRate;
     private String type; //TODO: make enum, either sync or slew, park or unpark
@@ -20,11 +18,9 @@ public class Target {
         //default constructor
     }
 
-    public Target(Double raDeg, Double dec, Double alt, Double az) {
+    public Target(Double raDeg, Double dec) {
         this.raDeg = raDeg;
         this.dec = dec;
-        this.alt = alt;
-        this.az = az;
     }
 
     public Double getRaDeg() {
@@ -49,22 +45,6 @@ public class Target {
 
     public void setDec(Double dec) {
         this.dec = dec;
-    }
-
-    public Double getAlt() {
-        return alt;
-    }
-
-    public void setAlt(Double alt) {
-        this.alt = alt;
-    }
-
-    public Double getAz() {
-        return az;
-    }
-
-    public void setAz(Double az) {
-        this.az = az;
     }
 
     public String getMotion() {

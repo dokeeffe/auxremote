@@ -171,7 +171,7 @@ public class MountService {
             auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, true));
             mount.setAltSlewInProgress(false);
             mount.setAzSlewInProgress(false);
-            throw new RuntimeException("Slew Limit Reached");
+            throw new RuntimeException("Slew Limit Reached " + mount.getAlt() + " " + mount.getAz());
         }
     }
 

@@ -78,7 +78,7 @@ public class CoordTransformer {
         double lst = localSiderealTime(utc, lon);
         double meridianOffset = (nexstarAzimuth - 180) * -1;
         LOGGER.debug("RA from nexstar mount az azis={}, meridianOffset={}", nexstarAzimuth, meridianOffset);
-        Target target = new Target((((lst + meridianOffset) + 360) % 360), nexstarAlt, 0.0, 0.0);
+        Target target = new Target((((lst + meridianOffset) + 360) % 360), nexstarAlt);
         LOGGER.debug("radeg {}", target.getRaDeg());
         target.setRaHours(convertRaDegToHours(target.getRaDeg()));
         return target;

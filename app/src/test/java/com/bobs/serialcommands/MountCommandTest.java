@@ -35,6 +35,20 @@ public class MountCommandTest extends BaseCommandTest {
     }
 
     @Test
+    public void bytesToDegrees_parkPositionDueSouthHorizionAz() throws Exception {
+        //actual command = 500410027FEE0001
+        assertEquals(180, sut.bytesToDegrees("7FEE00"), 0.1);
+    }
+
+    @Test
+    public void bytesToDegrees_parkPositionDueSouthHorizionAlt() throws Exception {
+        //actual command = 50041102E4E80E01
+        assertEquals(360-38.2, sut.bytesToDegrees("E4E80E"), 0.1);
+    }
+
+
+
+    @Test
     public void degreesToBytes() throws Exception {
         //actual values from debug logs
         byte[] result = sut.degreesToBytes(196.6681383054);

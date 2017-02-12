@@ -6,6 +6,7 @@ import org.junit.Test;
 import javax.xml.bind.DatatypeConverter;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 /**
@@ -32,4 +33,9 @@ public class SetAltMcPositionTest extends BaseCommandTest {
         verifyZeroInteractions(mockMount);
     }
 
+    @Test
+    public void handleMessage_when_FailToSetPosition_then_alignedFalse() throws Exception {
+        sut.handleMessage(PENDING);
+        verify(mockMount).setAligned(false);
+    }
 }
