@@ -75,8 +75,8 @@ const char * AuxRemote::getDefaultName() {
 }
 
 bool AuxRemote::initProperties() {
-  IUFillText(&CurrentStateT[0],"State","Mount State",NULL);
-  IUFillTextVector(&CurrentStateTP,CurrentStateT,1,getDeviceName(),"STATE","MOUNT_STATE",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
+  IUFillText(&CurrentStateMsgT[0],"State","Mount Msgs",NULL);
+  IUFillTextVector(&CurrentStateMsgTP,CurrentStateMsgT,1,getDeviceName(),"STATE","MOUNT_MSG",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
     
   INDI::Telescope::initProperties();
   IUFillText(&httpEndpointT[0], "API_ENDPOINT", "API Endpoint", "http://localhost:8080/api");
@@ -121,7 +121,7 @@ bool AuxRemote::updateProperties() {
   {
     defineNumber(&GuideNSNP);
     defineNumber(&GuideWENP);
-    defineText(&CurrentStateTP);
+    defineText(&CurrentStateMsgTP);
 
     if (InitPark()) {
         // If loading parking data is successful, we just set the default parking values.
@@ -146,7 +146,7 @@ bool AuxRemote::updateProperties() {
   {
       deleteProperty(GuideNSNP.name);
       deleteProperty(GuideWENP.name);
-      deleteProperty(CurrentStateTP.name);
+      deleteProperty(CurrentStateMsgTP.name);
   }
 
   return true;
@@ -323,8 +323,8 @@ bool AuxRemote::ReadScopeStatus() {
             }
             if (!strcmp(it->key, "statusMessage") && it->value.getTag()!=JSON_NULL) {
               char *statusMessage = it->value.toString();
-              IUSaveText(&CurrentStateT[0], statusMessage);
-              IDSetText(&CurrentStateTP, NULL);
+              IUSaveText(&CurrentStateMsgT[0], statusMessage);
+              IDSetText(&CurrentStateMsgTP, NULL);
             }
             if (!strcmp(it->key, "trackingState") && !isParked()) {
               char *ts = it->value.toString();

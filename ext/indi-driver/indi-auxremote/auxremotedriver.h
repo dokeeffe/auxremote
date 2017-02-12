@@ -47,8 +47,8 @@ protected:
 
 private:
 
-  IText CurrentStateT[1];
-  ITextVectorProperty CurrentStateTP;
+  IText CurrentStateMsgT[1];
+  ITextVectorProperty CurrentStateMsgTP;
 
   bool SendPostRequest(const char *json_payload,const char *path);
   double currentRA, currentDEC;
