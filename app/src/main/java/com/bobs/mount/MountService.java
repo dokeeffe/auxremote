@@ -68,6 +68,8 @@ public class MountService {
     @Async
     public void sync(Target target) {
         if (!mount.isLocationSet()) {
+            mount.setError(true);
+            mount.setStatusMessage("Mount location is not set. Please connect GPS or set location");
             throw new IllegalStateException("Mount location is not set. Please connect GPS or set location");
         }
         LOGGER.info("Syncing to RA:{} DEC:{}", target.getRaHours(), target.getDec());
@@ -88,6 +90,7 @@ public class MountService {
         }
         queryMountState();
         mount.setAligned(true);
+        mount.setError(false);
     }
 
     /**
@@ -101,6 +104,7 @@ public class MountService {
     @Async
     public void slew(Target target, boolean parkSlew) {
         if (!mount.isAligned()) {
+            mount.setError(true);
             mount.setStatusMessage("Error: Please sync mount before slewing");
             throw new IllegalStateException("Please sync/align the mount before slewing");
         }
@@ -166,11 +170,12 @@ public class MountService {
         CoordTransformer coordTransformer = new CoordTransformer();
         coordTransformer.populateAltAzFromRaDec(mount);
         if (mount.getAz() != null && mount.getAlt() < mount.getSlewLimitAlt()) {
-            mount.setStatusMessage("slew limit reached, aborting");
             auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, true));
             auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, true));
             mount.setAltSlewInProgress(false);
             mount.setAzSlewInProgress(false);
+            mount.setError(true);
+            mount.setStatusMessage("slew limit reached, aborting");
             throw new RuntimeException("Slew Limit Reached " + mount.getAlt() + " " + mount.getAz());
         }
     }
@@ -199,6 +204,7 @@ public class MountService {
     public Target park(Target target) {
         if (!mount.isAligned()) {
             mount.setStatusMessage("Error: Please sync mount before slewing");
+            mount.setError(true);
             throw new IllegalStateException("Please sync/align the mount before moving");
         }
         LOGGER.warn("PARKING MOUNT");
@@ -250,6 +256,8 @@ public class MountService {
      */
     public boolean connect() {
         mount.setTrackingMode(TrackingMode.EQ_NORTH);
+        mount.setError(false);
+        mount.setStatusMessage(null);
         if (!auxAdapter.isConnected()) {
             auxAdapter.setSerialPortName(mount.getSerialPort());
             LOGGER.info("Starting serial adapter thread");
@@ -271,7 +279,6 @@ public class MountService {
      */
     @Scheduled(fixedDelay = 20000)
     public void queryMountState() {
-        mount.setStatusMessage(null);
         if (auxAdapter.isConnected() && !mount.isSlewing()) {
             if (mount.isLocationSet() && mount.getTrackingMode() != null) {
                 LOGGER.debug("Sending serial queueCommand to query az state");
@@ -370,6 +377,8 @@ public class MountService {
      */
     public Mount getMount() {
         if (!auxAdapter.isConnected()) {
+            mount.setError(true);
+            mount.setStatusMessage("NOT CONNECTED");
             throw new IllegalStateException("Not Connected");
         }
         LOGGER.debug("Getting mount. RA {}, DEC {}", mount.getRaHours(), mount.getDecDegrees());

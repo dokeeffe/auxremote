@@ -47,6 +47,9 @@ protected:
 
 private:
 
+  IText CurrentStateT[1];
+  ITextVectorProperty CurrentStateTP;
+
   bool SendPostRequest(const char *json_payload,const char *path);
   double currentRA, currentDEC;
   bool pecIndexFound;

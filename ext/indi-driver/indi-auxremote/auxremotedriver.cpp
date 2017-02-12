@@ -75,6 +75,9 @@ const char * AuxRemote::getDefaultName() {
 }
 
 bool AuxRemote::initProperties() {
+  IUFillText(&CurrentStateT[0],"State","Mount State",NULL);
+  IUFillTextVector(&CurrentStateTP,CurrentStateT,1,getDeviceName(),"STATE","MOUNT_STATE",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
+    
   INDI::Telescope::initProperties();
   IUFillText(&httpEndpointT[0], "API_ENDPOINT", "API Endpoint", "http://localhost:8080/api");
   IUFillTextVector(&httpEndpointTP, httpEndpointT, 1, getDeviceName(), "HTTP_API_ENDPOINT", "HTTP endpoint", OPTIONS_TAB, IP_RW, 5, IPS_IDLE);
@@ -118,7 +121,7 @@ bool AuxRemote::updateProperties() {
   {
     defineNumber(&GuideNSNP);
     defineNumber(&GuideWENP);
-
+    defineText(&CurrentStateTP);
 
     if (InitPark()) {
         // If loading parking data is successful, we just set the default parking values.
@@ -143,10 +146,7 @@ bool AuxRemote::updateProperties() {
   {
       deleteProperty(GuideNSNP.name);
       deleteProperty(GuideWENP.name);
-      // deleteProperty(EqPENV.name);
-      // deleteProperty(PEErrNSSP.name);
-      // deleteProperty(PEErrWESP.name);
-      // deleteProperty(GuideRateNP.name);
+      deleteProperty(CurrentStateTP.name);
   }
 
   return true;
@@ -265,7 +265,7 @@ bool AuxRemote::Disconnect() {
 }
 
 bool AuxRemote::ReadScopeStatus() {
-  bool result = false;
+  bool result = true;
   //DEBUGF(INDI::Logger::DBG_DEBUG, "Reading status from %s",httpEndpointT[0].text);
   CURL *curl;
   CURLcode res;
@@ -321,6 +321,11 @@ bool AuxRemote::ReadScopeStatus() {
               PecT[0].text = pecState;
               IDSetText(&PecTP,NULL);
             }
+            if (!strcmp(it->key, "statusMessage") && it->value.getTag()!=JSON_NULL) {
+              char *statusMessage = it->value.toString();
+              IUSaveText(&CurrentStateT[0], statusMessage);
+              IDSetText(&CurrentStateTP, NULL);
+            }
             if (!strcmp(it->key, "trackingState") && !isParked()) {
               char *ts = it->value.toString();
               //DEBUGF(INDI::Logger::DBG_DEBUG, "TrackingState= %s", ts);
@@ -351,11 +356,18 @@ bool AuxRemote::ReadScopeStatus() {
                 }
               }
             }
+            if (!strcmp(it->key, "error") && it->value.getTag()!=JSON_NULL) {
+              if(it->value.getTag()==JSON_TRUE) {
+                DEBUG(INDI::Logger::DBG_SESSION, "Mount error flag from API is true");
+                EqNP.s = IPS_ALERT;
+                result = false;
+              }
+              
+            }
         }
         NewRaDec(ra, dec);
         currentRA = ra;
         currentDEC = dec;
-        result = true;
       }
     }
     return result;

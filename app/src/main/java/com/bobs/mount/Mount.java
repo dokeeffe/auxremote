@@ -50,7 +50,7 @@ public class Mount {
     private String serialPort;
     private PecMode pecMode;
     private boolean pecIndexFound = false;
-    private String error;
+    private Boolean error;
     private GuideRate guideRate;
     private double cordWrapPosition;
     private String statusMessage;
@@ -277,11 +277,11 @@ public class Mount {
         this.pecIndexFound = pecIndexFound;
     }
 
-    public String getError() {
+    public Boolean getError() {
         return error;
     }
 
-    public void setError(String error) {
+    public void setError(Boolean error) {
         this.error = error;
     }
 

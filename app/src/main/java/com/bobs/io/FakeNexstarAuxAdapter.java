@@ -87,10 +87,14 @@ public class FakeNexstarAuxAdapter implements NexstarAuxAdapter {
                 handleSetAzMcPosition(((SetAzMcPosition)command));
             }
             if (command instanceof QueryAzMcPosition) {
-                command.handleMessage(this.azMcPosition);
+                if(this.azMcPosition!=null) {
+                    command.handleMessage(this.azMcPosition);
+                }
             }
             if (command instanceof QueryAltMcPosition) {
-                command.handleMessage(this.altMcPosition);
+                if(this.altMcPosition!=null){
+                    command.handleMessage(this.altMcPosition);
+                }
             }
             if (command instanceof Goto) {
                 handleGoto(((Goto)command));
