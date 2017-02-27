@@ -91,6 +91,8 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
                     } catch (Exception ex) {
                         //Catch all to avoid killing this message processing thread.
                         LOGGER.error("Fatal error processing response. Continuing to Process messages", ex);
+                    } finally {
+                        rateLimit();
                     }
                 }
             } catch (SerialPortException e) {
@@ -98,6 +100,17 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
             } catch (InterruptedException e) {
                 LOGGER.error("Polling interrupted", e);
             }
+        }
+    }
+
+    /**
+     * Enforce a ratelimit of max 5 commands/sec
+     */
+    private void rateLimit() {
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            LOGGER.warn("Sleep interrupted");
         }
     }
 
