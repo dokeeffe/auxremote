@@ -8,6 +8,8 @@ import org.junit.Test;
 import javax.xml.bind.DatatypeConverter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by dokeeffe on 1/2/17.
@@ -41,18 +43,33 @@ public class MoveTest extends BaseCommandTest {
     }
 
     @Test
-    public void handleMessage_ack() throws Exception {
+    public void handleMessage_ack_alt_move() throws Exception {
         Move MoveCommand = new Move(mount, 1, Axis.ALT, true);
         MoveCommand.handleMessage(ACK);
         assertEquals(TrackingState.SLEWING, mount.getTrackingState());
+        assertTrue(mount.isAltSlewInProgress());
+    }
+
+    @Test
+    public void handleMessage_ack_az_move() throws Exception {
+        Move MoveCommand = new Move(mount, 1, Axis.AZ, true);
+        MoveCommand.handleMessage(ACK);
+        assertEquals(TrackingState.SLEWING, mount.getTrackingState());
+        assertTrue(mount.isAzSlewInProgress());
     }
 
     @Test
     public void handleMessage_ack_for_abort() throws Exception {
+        mount.setAltSlewInProgress(true);
+        mount.setAzSlewInProgress(true);
         Move MoveCommand = new Move(mount, 0, Axis.ALT, true);
         MoveCommand.handleMessage(ACK);
         assertEquals(TrackingState.TRACKING, mount.getTrackingState());
+        assertFalse(mount.isAltSlewInProgress());
+        assertFalse(mount.isAzSlewInProgress());
     }
+
+
 
     @Test
     public void handleMessage_nonack() throws Exception {

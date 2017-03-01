@@ -65,8 +65,15 @@ public class Move extends MountCommand {
         } else {
             if (rate == 0) {
                 mount.setTrackingState(TrackingState.TRACKING);
+                mount.setAltSlewInProgress(false);
+                mount.setAzSlewInProgress(false);
             } else {
                 mount.setTrackingState(TrackingState.SLEWING);
+                if (Axis.ALT == axis) {
+                    mount.setAltSlewInProgress(true);
+                } else {
+                    mount.setAzSlewInProgress(true);
+                }
             }
         }
     }

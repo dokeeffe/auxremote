@@ -148,11 +148,9 @@ public class MountService {
             LOGGER.debug("monitoring slew");
             if (mount.isAzSlewInProgress()) {
                 auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.AZ));
-                sleep(500);
             }
             if (mount.isAltSlewInProgress()) {
                 auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.ALT));
-                sleep(500);
             }
             auxAdapter.queueCommand(new QueryAzMcPosition(mount));
             auxAdapter.queueCommand(new QueryAltMcPosition(mount));
@@ -381,7 +379,7 @@ public class MountService {
             mount.setStatusMessage("NOT CONNECTED");
             throw new IllegalStateException("Not Connected");
         }
-        LOGGER.debug("Getting mount. RA {}, DEC {}", mount.getRaHours(), mount.getDecDegrees());
+        LOGGER.debug("Getting mount RA:DEC {} {}", mount.getRaHours(), mount.getDecDegrees());
         return mount;
     }
 

@@ -38,7 +38,7 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
     /**
      * Channels are defined to sequence messages and order the responses.
      */
-    private BlockingQueue<MountCommand> inputChannel = new LinkedBlockingQueue<>(10);
+    private BlockingQueue<MountCommand> inputChannel = new LinkedBlockingQueue<>(20);
     private BlockingQueue<byte[]> outputChannel = new LinkedBlockingQueue<>(10);
     private boolean connected;
     private String serialPortName;
@@ -53,6 +53,7 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
     public void queueCommand(MountCommand command) {
         if (serialPort != null && serialPort.isOpened()) {
             this.inputChannel.add(command);
+            LOGGER.debug("{} messages in inputChannel",inputChannel.size());
         } else {
             throw new IllegalStateException("Cannot send messages when not connected");
         }
