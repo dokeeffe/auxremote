@@ -13,6 +13,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Low level IO adapter class responsible for serial communication with the mount by means of {@link MountCommand} objects.
@@ -42,6 +43,7 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
     private BlockingQueue<byte[]> outputChannel = new LinkedBlockingQueue<>(10);
     private boolean connected;
     private String serialPortName;
+    private AtomicInteger currentExpectedCommandLength = new AtomicInteger();
 
     /**
      * Queue a serial command. Serial commands are only issued in series (one after another)
@@ -53,7 +55,7 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
     public void queueCommand(MountCommand command) {
         if (serialPort != null && serialPort.isOpened()) {
             this.inputChannel.add(command);
-            LOGGER.debug("{} messages in inputChannel",inputChannel.size());
+            LOGGER.debug("Added {}. {} messages in inputChannel",command.getClass().getName(), inputChannel.size());
         } else {
             throw new IllegalStateException("Cannot send messages when not connected");
         }
@@ -72,7 +74,8 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
         this.serialPort = serialPortBuilder.buildSerialPortForHandset(serialPortName);
         connected = true;
         try {
-            serialPort.addEventListener(new AuxSerialPortEventListener(serialPort, outputChannel));
+            AuxSerialPortEventListener eventListener = new AuxSerialPortEventListener(serialPort, outputChannel, this.currentExpectedCommandLength);
+            serialPort.addEventListener(eventListener);
         } catch (SerialPortException e) {
             LOGGER.error("Error adding event listner port", e);
         }
@@ -81,14 +84,20 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
                 MountCommand command = inputChannel.poll(100, TimeUnit.DAYS);
                 byte[] cmd = command.getCommand();
                 LOGGER.debug("Sending {} message to mount {}", command.getClass().getName(), DatatypeConverter.printHexBinary(cmd));
+                currentExpectedCommandLength.set(expectedCommandLength(command));
                 serialPort.writeBytes(cmd);
                 byte[] response1 = outputChannel.poll(RESPONSE_TIMEOUT_SEC, TimeUnit.SECONDS);
                 if (response1 == null || response1.length == 0) {
                     LOGGER.error("Comms error, invalid response from mount {} or timed out waiting", response1);
                 } else {
                     try {
-                        LOGGER.debug("Processing response from mount");
-                        command.handleMessage(response1);
+                        if(response1.length != expectedCommandLength(command)) {
+                            LOGGER.error("ERROR invalid response length for message {} cmd {}",
+                                    DatatypeConverter.printHexBinary(response1), command.getClass().getName());
+                        } else {
+                            LOGGER.debug("Processing message {} from mount",DatatypeConverter.printHexBinary(response1));
+                            command.handleMessage(response1);
+                        }
                     } catch (Exception ex) {
                         //Catch all to avoid killing this message processing thread.
                         LOGGER.error("Fatal error processing response. Continuing to Process messages", ex);
@@ -102,6 +111,16 @@ public class NexstarAuxSerialAdapter implements NexstarAuxAdapter {
                 LOGGER.error("Polling interrupted", e);
             }
         }
+    }
+
+    /**
+     * The expected command lenth is always the last byte. Get the last byte and return it
+     * @param command
+     * @return
+     */
+    private int expectedCommandLength(MountCommand command) {
+        byte[] cmd = command.getCommand();
+        return cmd[cmd.length-1];
     }
 
     /**

@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Responsible for handling messages that come from the mount over the serial interface.
@@ -24,6 +25,7 @@ public class AuxSerialPortEventListener implements SerialPortEventListener {
     private final Queue queue;
     private final ByteArrayOutputStream os = new ByteArrayOutputStream();
     private static final Logger LOGGER = LoggerFactory.getLogger(AuxSerialPortEventListener.class);
+    private final AtomicInteger expectedCommandLength;
 
 
     /**
@@ -32,9 +34,10 @@ public class AuxSerialPortEventListener implements SerialPortEventListener {
      * @param serialPort
      * @param queue
      */
-    public AuxSerialPortEventListener(SerialPort serialPort, Queue queue) {
+    public AuxSerialPortEventListener(SerialPort serialPort, Queue queue, AtomicInteger expectedCommandLength) {
         this.serialPort = serialPort;
         this.queue = queue;
+        this.expectedCommandLength = expectedCommandLength;
     }
 
     /**
@@ -48,7 +51,7 @@ public class AuxSerialPortEventListener implements SerialPortEventListener {
             try {
                 byte[] eventVal = serialPort.readBytes(event.getEventValue());
                 os.write(eventVal);
-                if (eventVal[eventVal.length - 1] == MESSAGE_END) {
+                if (os.toByteArray().length > expectedCommandLength.intValue() && eventVal[eventVal.length - 1] == MESSAGE_END) {
                     os.flush();
                     byte[] data = os.toByteArray();
                     queue.add(Arrays.copyOf(data, data.length - 1)); //remove the last 0x23 char

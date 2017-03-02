@@ -77,7 +77,7 @@ const char * AuxRemote::getDefaultName() {
 bool AuxRemote::initProperties() {
   IUFillText(&CurrentStateMsgT[0],"State","Mount Msgs",NULL);
   IUFillTextVector(&CurrentStateMsgTP,CurrentStateMsgT,1,getDeviceName(),"STATE","MOUNT_MSG",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
-    
+
   INDI::Telescope::initProperties();
   IUFillText(&httpEndpointT[0], "API_ENDPOINT", "API Endpoint", "http://localhost:8080/api");
   IUFillTextVector(&httpEndpointTP, httpEndpointT, 1, getDeviceName(), "HTTP_API_ENDPOINT", "HTTP endpoint", OPTIONS_TAB, IP_RW, 5, IPS_IDLE);
@@ -321,9 +321,12 @@ bool AuxRemote::ReadScopeStatus() {
               PecT[0].text = pecState;
               IDSetText(&PecTP,NULL);
             }
-            if (!strcmp(it->key, "statusMessage") && it->value.getTag()!=JSON_NULL) {
-              char *statusMessage = it->value.toString();
-              IUSaveText(&CurrentStateMsgT[0], statusMessage);
+            if (!strcmp(it->key, "statusMessage")) {
+              if (it->value.getTag()!=JSON_NULL) {
+                IUSaveText(&CurrentStateMsgT[0], it->value.toString());
+              } else {
+                IUSaveText(&CurrentStateMsgT[0], "");
+              }
               IDSetText(&CurrentStateMsgTP, NULL);
             }
             if (!strcmp(it->key, "trackingState") && !isParked()) {
@@ -362,7 +365,7 @@ bool AuxRemote::ReadScopeStatus() {
                 EqNP.s = IPS_ALERT;
                 result = false;
               }
-              
+
             }
         }
         NewRaDec(ra, dec);

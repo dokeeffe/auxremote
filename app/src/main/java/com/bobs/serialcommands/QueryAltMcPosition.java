@@ -39,17 +39,17 @@ public class QueryAltMcPosition extends MountCommand {
 
     @Override
     public void handleMessage(byte[] message) {
-        CoordTransformer coordTransformer = new CoordTransformer();
-        String hex = DatatypeConverter.printHexBinary(message);
-        double positionAngle = bytesToDegrees(hex);
-        if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
-            double dec = coordTransformer.convertAltPositionAngleToDecForEqNorth(positionAngle);
-            LOGGER.debug("DEC {}", dec);
-            mount.setDecDegrees(dec);
-        } else {
-            throw new UnsupportedOperationException("Currently only EQ_NORTH is supported.");
+        if(!badPositionMessage(message)) {
+            CoordTransformer coordTransformer = new CoordTransformer();
+            String hex = DatatypeConverter.printHexBinary(message);
+            double positionAngle = bytesToDegrees(hex);
+            if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
+                double dec = coordTransformer.convertAltPositionAngleToDecForEqNorth(positionAngle);
+                LOGGER.debug("DEC {}", dec);
+                mount.setDecDegrees(dec);
+            } else {
+                throw new UnsupportedOperationException("Currently only EQ_NORTH is supported.");
+            }
         }
     }
-
-
 }

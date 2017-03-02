@@ -39,20 +39,22 @@ public class QueryAzMcPosition extends MountCommand {
 
     @Override
     public void handleMessage(byte[] message) {
-        CoordTransformer coordTransformer = new CoordTransformer();
-        String hex = DatatypeConverter.printHexBinary(message);
-        double azimuthDegreesReportedByMount = bytesToDegrees(hex);
-        LOGGER.debug("ALTAZ raw data = {}", azimuthDegreesReportedByMount);
-        if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
-            Target position = coordTransformer.buildTargetFromNexstarEqNorth(
-                    mount.getCalendarProvider().provide(),
-                    mount.getLongitude(),
-                    azimuthDegreesReportedByMount,
-                    mount.getDecDegrees());
-            LOGGER.debug("RA {}", position.getRaHours());
-            mount.setRaHours(position.getRaHours());
-        } else {
-            throw new UnsupportedOperationException("Currently only EQ_NORTH is supported.");
+        if(!badPositionMessage(message)) {
+            CoordTransformer coordTransformer = new CoordTransformer();
+            String hex = DatatypeConverter.printHexBinary(message);
+            double azimuthDegreesReportedByMount = bytesToDegrees(hex);
+            LOGGER.debug("ALTAZ raw data = {}", azimuthDegreesReportedByMount);
+            if (TrackingMode.EQ_NORTH.equals(mount.getTrackingMode())) {
+                Target position = coordTransformer.buildTargetFromNexstarEqNorth(
+                        mount.getCalendarProvider().provide(),
+                        mount.getLongitude(),
+                        azimuthDegreesReportedByMount,
+                        mount.getDecDegrees());
+                LOGGER.debug("RA {}", position.getRaHours());
+                mount.setRaHours(position.getRaHours());
+            } else {
+                throw new UnsupportedOperationException("Currently only EQ_NORTH is supported.");
+            }
         }
     }
 }

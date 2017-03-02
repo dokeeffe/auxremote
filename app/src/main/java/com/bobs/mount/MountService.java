@@ -1,6 +1,7 @@
 package com.bobs.mount;
 
 import static com.bobs.coord.CoordTransformer.ONE_DEG_IN_HOURS;
+import static com.bobs.mount.TrackingState.*;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -109,20 +110,18 @@ public class MountService {
             throw new IllegalStateException("Please sync/align the mount before slewing");
         }
         LOGGER.info("Slewing to RA:{} DEC:{}", target.getRaHours(), target.getDec());
-        if (parkSlew) {
-            mount.setTrackingState(TrackingState.PARKING);
-        } else {
-            mount.setTrackingState(TrackingState.SLEWING);
-        }
+        mount.setTrackingState(parkSlew ? PARKING : SLEWING);
         if (fastSlewRequired(mount, target)) {
             slewAndWait(target, true);
         }
-        slewAndWait(target, false);
-        if (parkSlew) {
-            mount.setTrackingState(TrackingState.PARKED);
-        } else {
-            mount.setTrackingState(TrackingState.TRACKING);
+        if(stillSlewingOrParking()) {
+            slewAndWait(target, false);
         }
+        mount.setTrackingState(parkSlew ? PARKED : TRACKING);
+    }
+
+    private boolean stillSlewingOrParking() {
+        return mount.getTrackingState()==PARKING || mount.getTrackingState()==SLEWING;
     }
 
     /**
@@ -141,7 +140,7 @@ public class MountService {
                 mount.getLongitude(),
                 coordTransformer.convertRaHoursToDeg(target.getRaHours()));
         double altitudeAxisDegrees = target.getDec();
-        LOGGER.debug("starting slew");
+        LOGGER.debug("Starting slew to azisALT:{} AZ:{} ", altitudeAxisDegrees, azimuthAxisDegrees);
         auxAdapter.queueCommand(new Goto(mount, altitudeAxisDegrees, Axis.ALT, fast));
         auxAdapter.queueCommand(new Goto(mount, azimuthAxisDegrees, Axis.AZ, fast));
         while (mount.isSlewing()) {
@@ -155,6 +154,7 @@ public class MountService {
             auxAdapter.queueCommand(new QueryAzMcPosition(mount));
             auxAdapter.queueCommand(new QueryAltMcPosition(mount));
             auxAdapter.waitForQueueEmpty();
+            //TODO: Sleep here to limit the message rate
             enforceSlewLimit();
         }
     }
@@ -167,6 +167,7 @@ public class MountService {
     private void enforceSlewLimit() {
         CoordTransformer coordTransformer = new CoordTransformer();
         coordTransformer.populateAltAzFromRaDec(mount);
+        LOGGER.debug("Monitoring Slew ALTAZ {} {}",mount.getAlt(), mount.getAz());
         if (mount.getAz() != null && mount.getAlt() < mount.getSlewLimitAlt()) {
             auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, true));
             auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, true));
@@ -206,12 +207,12 @@ public class MountService {
             throw new IllegalStateException("Please sync/align the mount before moving");
         }
         LOGGER.warn("PARKING MOUNT");
-        mount.setTrackingState(TrackingState.PARKING);
+        mount.setTrackingState(PARKING);
         slew(target, true);
         auxAdapter.queueCommand(new SetGuideRate(mount, MountCommand.AZM_BOARD, GuideRate.OFF));
         auxAdapter.queueCommand(new SetGuideRate(mount, MountCommand.ALT_BOARD, GuideRate.OFF));
         auxAdapter.waitForQueueEmpty();
-        mount.setTrackingState(TrackingState.PARKED);
+        mount.setTrackingState(PARKED);
         mount.saveState();
         return target;
     }
@@ -240,7 +241,7 @@ public class MountService {
             if (mount.getGuideRate() == GuideRate.OFF) {
                 mount.setTrackingState(TrackingState.IDLE);
             } else {
-                mount.setTrackingState(TrackingState.TRACKING);
+                mount.setTrackingState(TRACKING);
             }
         } else {
             throw new UnsupportedOperationException("Currently only EQ north mode is supported.");
@@ -284,7 +285,7 @@ public class MountService {
                 LOGGER.debug("Sending serial queueCommand to query alt state");
                 auxAdapter.queueCommand(new QueryAltMcPosition(mount));
             }
-            if (mount.isGpsInfoOld() && mount.getTrackingState() != TrackingState.SLEWING) {
+            if (mount.isGpsInfoOld() && mount.getTrackingState() != SLEWING) {
                 queryGps();
             }
         }
@@ -379,7 +380,7 @@ public class MountService {
             mount.setStatusMessage("NOT CONNECTED");
             throw new IllegalStateException("Not Connected");
         }
-        LOGGER.debug("Getting mount RA:DEC {} {}", mount.getRaHours(), mount.getDecDegrees());
+//        LOGGER.debug("Getting mount RA:DEC {} {}", mount.getRaHours(), mount.getDecDegrees());
         return mount;
     }
 

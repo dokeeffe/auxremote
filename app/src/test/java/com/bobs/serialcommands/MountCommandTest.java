@@ -46,6 +46,12 @@ public class MountCommandTest extends BaseCommandTest {
         assertEquals(360-38.2, sut.bytesToDegrees("E4E80E"), 0.1);
     }
 
+    @Test
+    public void bytesToDegrees_westOfMeridian219Deg() throws Exception {
+        //actual command = 500410029BAB0501
+        assertEquals(219, sut.bytesToDegrees("9BAB05"), 0.5);
+    }
+
 
 
     @Test

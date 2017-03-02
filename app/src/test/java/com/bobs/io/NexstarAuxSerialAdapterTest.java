@@ -3,10 +3,12 @@ package com.bobs.io;
 import com.bobs.serialcommands.MountCommand;
 import jssc.SerialPort;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -19,7 +21,6 @@ public class NexstarAuxSerialAdapterTest {
 
     private NexstarAuxSerialAdapter sut;
     private SerialPort serialPort;
-    private AuxSerialPortEventListener auxSerialPortEventListener;
     private Queue outputChannel;
     private Queue inputChannel;
     private MountCommand testCommand;
@@ -37,15 +38,8 @@ public class NexstarAuxSerialAdapterTest {
         sut.setSerialPortBuilder(serialPortBuilder);
         outputChannel = (Queue) ReflectionTestUtils.getField(sut, "outputChannel");
         inputChannel = (Queue) ReflectionTestUtils.getField(sut, "inputChannel");
-        auxSerialPortEventListener = new AuxSerialPortEventListener(serialPort, outputChannel);
         new Thread(sut).start();
         Thread.sleep(100);
-    }
-
-    @Test
-    public void queueCommand() throws Exception {
-        sut.queueCommand(testCommand);
-        assertEquals(1, inputChannel.size());
     }
 
     @Test(expected = IllegalStateException.class)

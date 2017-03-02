@@ -109,4 +109,14 @@ public abstract class MountCommand {
         result[0] = (byte) ((intTicks >> 16) & 0xFF);
         return result;
     }
+
+    protected boolean badPositionMessage(byte[] message) {
+        boolean result = true;
+        for(byte b : message) {
+            if(b!=0x00) {
+                result = false; //OK!
+            }
+        }
+        return result;
+    }
 }
