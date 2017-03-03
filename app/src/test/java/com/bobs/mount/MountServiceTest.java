@@ -11,10 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.xml.bind.DatatypeConverter;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -45,6 +42,7 @@ public class MountServiceTest {
         mount.setLocationSet(true);
         mountService.setPecPollInterval(10); //to speedup test
         mount.setCalendarProvider(calendarProvider);
+        mount.setGpsUpdateTime(new Date());
     }
 
     @Test
@@ -77,29 +75,6 @@ public class MountServiceTest {
     }
 
     @Test
-    public void slew_crashInvestigation() throws Exception {
-        mount.setAligned(true);
-        Target target = new Target();
-        target.setRaHours(4.696695);
-        target.setDec(-38.100300);
-        CalendarProvider mockCalendarProvider = mock(DefaultCalendarProvider.class);
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(Calendar.YEAR, 2017);
-        cal.set(Calendar.MONTH, Calendar.FEBRUARY);
-        cal.set(Calendar.DAY_OF_MONTH, 5);
-        cal.set(Calendar.HOUR_OF_DAY, 20);
-        cal.set(Calendar.MINUTE, 12);
-        cal.set(Calendar.SECOND, 18);
-        when(mockCalendarProvider.provide()).thenReturn(cal);
-        mount.setCalendarProvider(mockCalendarProvider);
-
-        //act
-        mountService.slew(target, false);
-        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(4.69, mount.getRaHours(), 0.1);
-    }
-
-    @Test
     public void slew_fastSlewSlowSlewCombo() throws Exception {
         mount.setAligned(true);
         Target target = new Target();
@@ -108,20 +83,16 @@ public class MountServiceTest {
 
         mountService.slew(target, false);
 
-        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(Goto.class, queuedCommands.get(0).getClass());
-        assertEquals(Goto.class, queuedCommands.get(1).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(2).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(3).getClass());
-        assertEquals(QueryAzMcPosition.class, queuedCommands.get(4).getClass());
-        assertEquals(QueryAltMcPosition.class, queuedCommands.get(5).getClass());
-        assertEquals(Goto.class, queuedCommands.get(6).getClass());
-        assertEquals(Goto.class, queuedCommands.get(7).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(8).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(9).getClass());
-        assertEquals(QueryAzMcPosition.class, queuedCommands.get(10).getClass());
-        assertEquals(QueryAltMcPosition.class, queuedCommands.get(11).getClass());
-        assertEquals(12, queuedCommands.size());
+        Iterator<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands().iterator();
+        assertEquals(Goto.class, queuedCommands.next().getClass());
+        assertEquals(Goto.class, queuedCommands.next().getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.next().getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.next().getClass());
+        assertEquals(Goto.class, queuedCommands.next().getClass());
+        assertEquals(Goto.class, queuedCommands.next().getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.next().getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.next().getClass());
+        assertEquals(8, fakeAuxAdapter.getQueuedCommands().size());
     }
 
     @Test
@@ -140,9 +111,7 @@ public class MountServiceTest {
         assertEquals(Goto.class, queuedCommands.get(1).getClass());
         assertEquals(QuerySlewDone.class, queuedCommands.get(2).getClass());
         assertEquals(QuerySlewDone.class, queuedCommands.get(3).getClass());
-        assertEquals(QueryAzMcPosition.class, queuedCommands.get(4).getClass());
-        assertEquals(QueryAltMcPosition.class, queuedCommands.get(5).getClass());
-        assertEquals(6, queuedCommands.size());
+        assertEquals(4, queuedCommands.size());
     }
 
     @Test
@@ -154,28 +123,24 @@ public class MountServiceTest {
 
         mountService.park(target);
 
-        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(Goto.class, queuedCommands.get(0).getClass());
-        assertEquals(Goto.class, queuedCommands.get(1).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(2).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(3).getClass());
-        assertEquals(QueryAzMcPosition.class, queuedCommands.get(4).getClass());
-        assertEquals(QueryAltMcPosition.class, queuedCommands.get(5).getClass());
-        assertEquals(Goto.class, queuedCommands.get(6).getClass());
-        assertEquals(Goto.class, queuedCommands.get(7).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(8).getClass());
-        assertEquals(QuerySlewDone.class, queuedCommands.get(9).getClass());
-        assertEquals(QueryAzMcPosition.class, queuedCommands.get(10).getClass());
-        assertEquals(QueryAltMcPosition.class, queuedCommands.get(11).getClass());
-        assertEquals(SetGuideRate.class, queuedCommands.get(12).getClass());
-        assertEquals(SetGuideRate.class, queuedCommands.get(13).getClass());
+        Iterator<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands().iterator();
+        assertEquals(Goto.class, queuedCommands.next().getClass());
+        assertEquals(Goto.class, queuedCommands.next().getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.next().getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.next().getClass());
+        assertEquals(Goto.class, queuedCommands.next().getClass());
+        assertEquals(Goto.class, queuedCommands.next().getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.next().getClass());
+        assertEquals(QuerySlewDone.class, queuedCommands.next().getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.next().getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.next().getClass());
         assertEquals(TrackingState.PARKED, mount.getTrackingState());
-        assertEquals(14, queuedCommands.size());
+        assertEquals(10, fakeAuxAdapter.getQueuedCommands().size());
     }
 
 
     @Test(expected = RuntimeException.class)
-    public void park_when_targetBelowHorizion_then_slewLimitPreventsDamage() throws Exception {
+    public void enforceSlewLimit_when_belowHorizion_then_errorSetAndExceptionThrown() throws Exception {
         mount.setAligned(true);
         mount.setLatitude(52.25338293632168);
         mount.setLongitude(351.63942525621803);
@@ -184,17 +149,20 @@ public class MountServiceTest {
         when(mockCalendarProvider.provide()).thenReturn(cal);
         mount.setCalendarProvider(mockCalendarProvider);
 
-        Target target = new Target();
-        target.setRaHours(19.696695);
-        target.setDec(-38.100300);
+        mount.setRaHours(19.696695);
+        mount.setDecDegrees(-38.100300);
+        mount.setAltSlewInProgress(true);
+        mount.setAzSlewInProgress(true);
 
-        mountService.park(target);
+        assertTrue(mount.getError());
+        mountService.enforceSlewLimit();
     }
 
 
     @Test
     public void unpark_then_guideRateSetPositionAndGpsQueried() throws Exception {
         mount.setAligned(false);
+        mount.setGpsUpdateTime(null); //force gps update
         mount.setTrackingState(TrackingState.PARKED);
         Target target = new Target();
         target.setRaHours(1.2);
@@ -202,20 +170,21 @@ public class MountServiceTest {
 
         mountService.unpark(target);
 
-        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(SetGuideRate.class, queuedCommands.get(0).getClass());
-        assertEquals(SetGuideRate.class, queuedCommands.get(1).getClass());
-        assertEquals(SetGuideRate.class, queuedCommands.get(2).getClass());
-        assertEquals(SetAltMcPosition.class, queuedCommands.get(3).getClass());
-        assertEquals(SetAzMcPosition.class, queuedCommands.get(4).getClass());
-        assertEquals(QueryAzMcPosition.class, queuedCommands.get(5).getClass());
-        assertEquals(QueryAltMcPosition.class, queuedCommands.get(6).getClass());
-        assertEquals(GpsLinked.class, queuedCommands.get(7).getClass());
-        assertEquals(GpsLat.class, queuedCommands.get(8).getClass());
-        assertEquals(GpsLon.class, queuedCommands.get(9).getClass());
+        Iterator<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands().iterator();
+        assertEquals(SetGuideRate.class, queuedCommands.next().getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.next().getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.next().getClass());
+        assertEquals(SetAltMcPosition.class, queuedCommands.next().getClass());
+        assertEquals(SetAzMcPosition.class, queuedCommands.next().getClass());
+        assertEquals(QueryAzMcPosition.class, queuedCommands.next().getClass());
+        assertEquals(QueryAltMcPosition.class, queuedCommands.next().getClass());
+        assertEquals(GpsLinked.class, queuedCommands.next().getClass());
+        assertEquals(GpsLat.class, queuedCommands.next().getClass());
+        assertEquals(GpsLon.class, queuedCommands.next().getClass());
+        assertEquals(QueryCordWrap.class, queuedCommands.next().getClass());
         assertTrue(mount.isAligned());
         assertEquals(TrackingState.TRACKING, mount.getTrackingState());
-        assertEquals(10, queuedCommands.size());
+        assertEquals(11, fakeAuxAdapter.getQueuedCommands().size());
     }
 
     @Test
@@ -263,14 +232,15 @@ public class MountServiceTest {
     }
 
     @Test
-    public void queryMountState_when_gpsInfoUptoDate_then_onlyPositionIsQueried() throws Exception {
+    public void queryMountState_when_gpsInfoUptoDate_then_onlyPositionAndCordwrapAreQueried() throws Exception {
         mount.setGpsUpdateTime(new Date());
         mountService.queryMountState();
 
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
         assertEquals(QueryAzMcPosition.class, queuedCommands.get(0).getClass());
         assertEquals(QueryAltMcPosition.class, queuedCommands.get(1).getClass());
-        assertEquals(2, queuedCommands.size());
+        assertEquals(QueryCordWrap.class, queuedCommands.get(2).getClass());
+        assertEquals(3, queuedCommands.size());
     }
 
     @Test
@@ -284,7 +254,8 @@ public class MountServiceTest {
         assertEquals(GpsLinked.class, queuedCommands.get(2).getClass());
         assertEquals(GpsLat.class, queuedCommands.get(3).getClass());
         assertEquals(GpsLon.class, queuedCommands.get(4).getClass());
-        assertEquals(5, queuedCommands.size());
+        assertEquals(QueryCordWrap.class, queuedCommands.get(5).getClass());
+        assertEquals(6, queuedCommands.size());
     }
 
     @Test
@@ -451,7 +422,7 @@ public class MountServiceTest {
         mountService.moveAxis(target);
 
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(3, queuedCommands.size());
+        assertEquals(4, queuedCommands.size());
         assertEquals(Move.class, queuedCommands.get(0).getClass());
         assertEquals(QueryAzMcPosition.class, queuedCommands.get(1).getClass());
         assertEquals(QueryAltMcPosition.class, queuedCommands.get(2).getClass());
@@ -472,7 +443,7 @@ public class MountServiceTest {
         mountService.moveAxis(target);
 
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(3, queuedCommands.size());
+        assertEquals(4, queuedCommands.size());
         assertEquals(Move.class, queuedCommands.get(0).getClass());
         assertEquals(QueryAzMcPosition.class, queuedCommands.get(1).getClass());
         assertEquals(QueryAltMcPosition.class, queuedCommands.get(2).getClass());
@@ -493,10 +464,11 @@ public class MountServiceTest {
         mountService.moveAxis(target);
 
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(3, queuedCommands.size());
+        assertEquals(4, queuedCommands.size());
         assertEquals(Move.class, queuedCommands.get(0).getClass());
         assertEquals(QueryAzMcPosition.class, queuedCommands.get(1).getClass());
         assertEquals(QueryAltMcPosition.class, queuedCommands.get(2).getClass());
+        assertEquals(QueryCordWrap.class, queuedCommands.get(3).getClass());
         Axis startAxis = (Axis) ReflectionTestUtils.getField(queuedCommands.get(0), "axis");
         boolean startPosDir = (boolean) ReflectionTestUtils.getField(queuedCommands.get(0), "positive");
         int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
@@ -514,10 +486,11 @@ public class MountServiceTest {
         mountService.moveAxis(target);
 
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(3, queuedCommands.size());
+        assertEquals(4, queuedCommands.size());
         assertEquals(Move.class, queuedCommands.get(0).getClass());
         assertEquals(QueryAzMcPosition.class, queuedCommands.get(1).getClass());
         assertEquals(QueryAltMcPosition.class, queuedCommands.get(2).getClass());
+        assertEquals(QueryCordWrap.class, queuedCommands.get(3).getClass());
         Axis startAxis = (Axis) ReflectionTestUtils.getField(queuedCommands.get(0), "axis");
         boolean startPosDir = (boolean) ReflectionTestUtils.getField(queuedCommands.get(0), "positive");
         int startRate = (int) ReflectionTestUtils.getField(queuedCommands.get(0), "rate");
@@ -536,7 +509,7 @@ public class MountServiceTest {
         mountService.moveAxis(target);
 
         List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(4, queuedCommands.size());
+        assertEquals(5, queuedCommands.size());
         assertEquals(Move.class, queuedCommands.get(0).getClass());
         assertEquals(Move.class, queuedCommands.get(1).getClass());
         assertEquals(QueryAzMcPosition.class, queuedCommands.get(2).getClass());
