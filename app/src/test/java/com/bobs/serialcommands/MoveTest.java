@@ -59,17 +59,22 @@ public class MoveTest extends BaseCommandTest {
     }
 
     @Test
-    public void handleMessage_ack_for_abort() throws Exception {
+    public void handleMessage_ack_for_ALTabort() throws Exception {
         mount.setAltSlewInProgress(true);
-        mount.setAzSlewInProgress(true);
         Move MoveCommand = new Move(mount, 0, Axis.ALT, true);
         MoveCommand.handleMessage(ACK);
         assertEquals(TrackingState.TRACKING, mount.getTrackingState());
         assertFalse(mount.isAltSlewInProgress());
-        assertFalse(mount.isAzSlewInProgress());
     }
 
-
+    @Test
+    public void handleMessage_ack_for_AZabort() throws Exception {
+        mount.setAzSlewInProgress(true);
+        Move MoveCommand = new Move(mount, 0, Axis.AZ, true);
+        MoveCommand.handleMessage(ACK);
+        assertEquals(TrackingState.TRACKING, mount.getTrackingState());
+        assertFalse(mount.isAzSlewInProgress());
+    }
 
     @Test
     public void handleMessage_nonack() throws Exception {
