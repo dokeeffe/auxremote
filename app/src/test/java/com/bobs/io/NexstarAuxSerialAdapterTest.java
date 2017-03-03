@@ -53,6 +53,7 @@ public class NexstarAuxSerialAdapterTest {
         sut.queueCommand(testCommand);
         outputChannel.add(new byte[]{0x21, 0x22});
         sut.waitForQueueEmpty();
+        Thread.sleep(200);
 
         verify(serialPort).writeBytes(new byte[]{0x01, 0x02});
         verify(testCommand).handleMessage(new byte[]{0x21, 0x22});
