@@ -140,7 +140,7 @@ public class MountServiceTest {
 
 
     @Test(expected = RuntimeException.class)
-    public void enforceSlewLimit_when_belowHorizion_then_errorSetAndExceptionThrown() throws Exception {
+    public void enforceSlewLimit_when_belowHorizion_then_exceptionThrown() throws Exception {
         mount.setAligned(true);
         mount.setLatitude(52.25338293632168);
         mount.setLongitude(351.63942525621803);
@@ -154,7 +154,6 @@ public class MountServiceTest {
         mount.setAltSlewInProgress(true);
         mount.setAzSlewInProgress(true);
 
-        assertTrue(mount.getError());
         mountService.enforceSlewLimit();
     }
 

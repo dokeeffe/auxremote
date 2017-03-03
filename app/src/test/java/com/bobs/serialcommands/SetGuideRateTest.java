@@ -51,6 +51,13 @@ public class SetGuideRateTest extends BaseCommandTest {
         assertEquals("5004110600000001", DatatypeConverter.printHexBinary(gr.getCommand()));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void getCommand_badCommand() throws Exception {
+        SetGuideRate gr = new SetGuideRate(mount, (byte) 0x22, GuideRate.OFF);
+        gr.getCommand();
+    }
+
+
     @Test
     public void handleMessage_switchOnTracking() throws Exception {
         mount.setTrackingState(TrackingState.IDLE);
