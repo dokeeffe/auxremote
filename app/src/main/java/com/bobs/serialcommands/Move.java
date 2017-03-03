@@ -63,20 +63,14 @@ public class Move extends MountCommand {
         if (message[0] != ACK) {
             LOGGER.error("Expected ACK, but got {}", DatatypeConverter.printHexBinary(message));
         } else {
-            if (rate == 0) {
-                mount.setTrackingState(TrackingState.TRACKING);
-                mount.setAltSlewInProgress(false);
-                mount.setAzSlewInProgress(false);
+            mount.setTrackingState(rate == 0 ? TrackingState.TRACKING : TrackingState.SLEWING);
+            if (Axis.ALT == axis) {
+                mount.setAltSlewInProgress(rate == 0 ? false: true);
             } else {
-                mount.setTrackingState(TrackingState.SLEWING);
-                if (Axis.ALT == axis) {
-                    mount.setAltSlewInProgress(true);
-                } else {
-                    mount.setAzSlewInProgress(true);
-                }
+                mount.setAzSlewInProgress(rate == 0 ? false: true);
             }
+
         }
     }
-
 
 }

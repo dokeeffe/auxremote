@@ -140,22 +140,17 @@ public class MountService {
                 mount.getLongitude(),
                 coordTransformer.convertRaHoursToDeg(target.getRaHours()));
         double altitudeAxisDegrees = target.getDec();
-        LOGGER.debug("Starting slew to azisALT:{} AZ:{} ", altitudeAxisDegrees, azimuthAxisDegrees);
+        LOGGER.debug("Slew to nextar-alt-ax-deg:{} nextar-az-ax-deg:{} ", altitudeAxisDegrees, azimuthAxisDegrees);
         auxAdapter.queueCommand(new Goto(mount, altitudeAxisDegrees, Axis.ALT, fast));
         auxAdapter.queueCommand(new Goto(mount, azimuthAxisDegrees, Axis.AZ, fast));
         while (mount.isSlewing()) {
-            LOGGER.debug("monitoring slew");
             if (mount.isAzSlewInProgress()) {
                 auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.AZ));
             }
             if (mount.isAltSlewInProgress()) {
                 auxAdapter.queueCommand(new QuerySlewDone(mount, Axis.ALT));
             }
-            auxAdapter.queueCommand(new QueryAzMcPosition(mount));
-            auxAdapter.queueCommand(new QueryAltMcPosition(mount));
-            auxAdapter.waitForQueueEmpty();
-            //TODO: Sleep here to limit the message rate
-            enforceSlewLimit();
+            sleep(1000); //artifical rate limit
         }
     }
 
@@ -164,18 +159,24 @@ public class MountService {
      * Enforce an ALT slew limit for the ALT axis to prevent damage.
      * If limit detected then send serial commands to abort any motion
      */
-    private void enforceSlewLimit() {
-        CoordTransformer coordTransformer = new CoordTransformer();
-        coordTransformer.populateAltAzFromRaDec(mount);
-        LOGGER.debug("Monitoring Slew ALTAZ {} {}",mount.getAlt(), mount.getAz());
-        if (mount.getAz() != null && mount.getAlt() < mount.getSlewLimitAlt()) {
-            auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, true));
-            auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, true));
-            mount.setAltSlewInProgress(false);
-            mount.setAzSlewInProgress(false);
-            mount.setError(true);
-            mount.setStatusMessage("slew limit reached, aborting");
-            throw new RuntimeException("Slew Limit Reached " + mount.getAlt() + " " + mount.getAz());
+    @Scheduled(fixedDelay = 1000)
+    public void enforceSlewLimit() {
+        if(mount.isSlewing()) {
+            auxAdapter.queueCommand(new QueryAzMcPosition(mount));
+            auxAdapter.queueCommand(new QueryAltMcPosition(mount));
+            auxAdapter.waitForQueueEmpty();
+            CoordTransformer coordTransformer = new CoordTransformer();
+            coordTransformer.populateAltAzFromRaDec(mount);
+            LOGGER.debug("Monitoring Slew limit ALTAZ {} {}",mount.getAlt(), mount.getAz());
+            if (mount.getAlt() != null && mount.getAlt() < mount.getSlewLimitAlt()) {
+                auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, true));
+                auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, true));
+                mount.setAltSlewInProgress(false);
+                mount.setAzSlewInProgress(false);
+                mount.setError(true);
+                mount.setStatusMessage("ABORTING: ALT slew limit " + mount.getAlt()) ;
+                throw new RuntimeException("Slew Limit Reached " + mount.getAlt() + " " + mount.getAz());
+            }
         }
     }
 
@@ -276,19 +277,20 @@ public class MountService {
     /**
      * Perform a query to the mount to determine current position if connected.
      */
-    @Scheduled(fixedDelay = 20000)
+    @Scheduled(fixedDelay = 60000)
     public void queryMountState() {
         if (auxAdapter.isConnected() && !mount.isSlewing()) {
             if (mount.isLocationSet() && mount.getTrackingMode() != null) {
-                LOGGER.debug("Sending serial queueCommand to query az state");
                 auxAdapter.queueCommand(new QueryAzMcPosition(mount));
-                LOGGER.debug("Sending serial queueCommand to query alt state");
                 auxAdapter.queueCommand(new QueryAltMcPosition(mount));
             }
-            if (mount.isGpsInfoOld() && mount.getTrackingState() != SLEWING) {
+            if (mount.isGpsInfoOld()) {
+                LOGGER.info("Querying GPS for new data");
                 queryGps();
             }
+            auxAdapter.queueCommand(new QueryCordWrap(mount));
         }
+        LOGGER.info("Queried mount state RA {} DEC {} Cordwrap {}", mount.getRaHours(),mount.getDecDegrees(), mount.isCordWrapEnabled());
     }
 
     /**
