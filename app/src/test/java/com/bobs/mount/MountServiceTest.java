@@ -154,7 +154,7 @@ public class MountServiceTest {
         mount.setAltSlewInProgress(true);
         mount.setAzSlewInProgress(true);
 
-        mountService.enforceSlewLimit();
+        mountService.monitorSlew();
     }
 
 
@@ -181,9 +181,11 @@ public class MountServiceTest {
         assertEquals(GpsLat.class, queuedCommands.next().getClass());
         assertEquals(GpsLon.class, queuedCommands.next().getClass());
         assertEquals(QueryCordWrap.class, queuedCommands.next().getClass());
+        assertEquals(EnableCordWrap.class, queuedCommands.next().getClass());
+        assertEquals(QueryCordWrapPos.class, queuedCommands.next().getClass());
         assertTrue(mount.isAligned());
         assertEquals(TrackingState.TRACKING, mount.getTrackingState());
-        assertEquals(11, fakeAuxAdapter.getQueuedCommands().size());
+        assertEquals(13, fakeAuxAdapter.getQueuedCommands().size());
     }
 
     @Test
@@ -220,14 +222,13 @@ public class MountServiceTest {
     public void connect() throws Exception {
         mountService.connect();
 
-        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
-        assertEquals(QueryCordWrapPos.class, queuedCommands.get(0).getClass());
-        assertEquals(EnableCordWrap.class, queuedCommands.get(1).getClass());
-        assertEquals(QueryCordWrap.class, queuedCommands.get(2).getClass());
-        assertEquals(SetGuideRate.class, queuedCommands.get(3).getClass());
-        assertEquals(SetGuideRate.class, queuedCommands.get(4).getClass());
-        assertEquals(SetGuideRate.class, queuedCommands.get(5).getClass());
-        assertEquals(6, queuedCommands.size());
+        Iterator<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands().iterator();
+        assertEquals(EnableCordWrap.class, queuedCommands.next().getClass());
+        assertEquals(QueryCordWrap.class, queuedCommands.next().getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.next().getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.next().getClass());
+        assertEquals(SetGuideRate.class, queuedCommands.next().getClass());
+        assertEquals(5, fakeAuxAdapter.getQueuedCommands().size());
     }
 
     @Test

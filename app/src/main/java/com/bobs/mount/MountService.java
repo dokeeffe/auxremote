@@ -60,6 +60,8 @@ public class MountService {
 
     private int pecPollInterval = DEFAULT_PEC_POLL_INTERVAL;
 
+    private static boolean SLEW_LIMIT_ENABLED = true;
+
     /**
      * The Sync operation is basically 'alignment'. It tells the mount where it is currently pointing.
      * This is used when unparking a mount or when using astrometric plate solving to perform alignment.
@@ -156,11 +158,11 @@ public class MountService {
 
 
     /**
-     * Enforce an ALT slew limit for the ALT axis to prevent damage.
+     * Monitor a slew and Enforce an ALT slew limit for the ALT axis to prevent damage.
      * If limit detected then send serial commands to abort any motion
      */
     @Scheduled(fixedDelay = 1000)
-    public void enforceSlewLimit() {
+    public void monitorSlew() {
         if(mount.isSlewing()) {
             auxAdapter.queueCommand(new QueryAzMcPosition(mount));
             auxAdapter.queueCommand(new QueryAltMcPosition(mount));
@@ -168,7 +170,7 @@ public class MountService {
             CoordTransformer coordTransformer = new CoordTransformer();
             coordTransformer.populateAltAzFromRaDec(mount);
             LOGGER.debug("Monitoring Slew limit ALTAZ {} {}",mount.getAlt(), mount.getAz());
-            if (mount.getAlt() != null && mount.getAlt() < mount.getSlewLimitAlt()) {
+            if (SLEW_LIMIT_ENABLED && mount.getAlt() != null && mount.getAlt() < mount.getSlewLimitAlt()) {
                 auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, true));
                 auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, true));
                 mount.setAltSlewInProgress(false);
@@ -227,6 +229,8 @@ public class MountService {
         LOGGER.info("Unparking and syncing to {}, {}", target.getRaHours(), target.getDec());
         startTracking();
         sync(target);
+        auxAdapter.queueCommand(new EnableCordWrap(mount)); //not sure if EnableCordWrap is really needed after unpark but if not done sometimes cordwrap does not seem to actually be enabled
+        auxAdapter.queueCommand(new QueryCordWrapPos(mount));
         //TODO: If option set to start PEC on unpark then send pecplayback command here
     }
 
@@ -265,7 +269,6 @@ public class MountService {
             sleep(1000);//wait for connect
         }
         LOGGER.debug("Enabling Cordwrap");
-        auxAdapter.queueCommand(new QueryCordWrapPos(mount));
         auxAdapter.queueCommand(new EnableCordWrap(mount));
         auxAdapter.queueCommand(new QueryCordWrap(mount));
         if (mount.getTrackingState() == TrackingState.TRACKING) {
