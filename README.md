@@ -1,16 +1,26 @@
+![](https://raw.githubusercontent.com/dokeeffe/auxremote/master/auxremote.png)
+
 [![Build Status](https://travis-ci.org/dokeeffe/auxremote.svg?branch=master)](https://travis-ci.org/dokeeffe/auxremote) 
 [![Coverage Status](https://codecov.io/github/dokeeffe/auxremote/coverage.svg?precision=1)](https://codecov.io/gh/dokeeffe/auxremote)
 [![Powered By](https://img.shields.io/badge/powered%20by-springframework-green.svg)](http://projects.spring.io/spring-boot/)
 [![Powered By](https://img.shields.io/badge/powered%20by-INDI-green.svg)](http://indilib.org/)
 
-![](https://raw.githubusercontent.com/dokeeffe/auxremote/master/auxremote.png)
-
 An alternative controller for Celestron telescopes. 
 
-Auxremote is a spring-boot micro service that communicates with a Celestron telescope using AUX serial commands tunnelled through the handset.
+Auxremote is a spring-boot micro service that communicates with a Celestron telescope using the AUX serial commands.
 It offers a high level HTTP api to control the mount and enables fully remote operation using the included [ INDI driver](https://github.com/dokeeffe/auxremote/tree/master/ext/indi-driver) .
 
-No more star alignment or hibernation mode needed to enable remote use. The mount can be aligned remotely from a cold start.
+**Mount** <--> **Handset** <--*serial aux protocol*--> **AUX-Remote** <--*http*--> **INDI_Driver** <--*indi protocol*--> **INDI_Clients**
+
+The following high level features are exposed via the HTTP api
+
+* Park/Unpark
+* Sync
+* GOTO
+* PEC operations
+* PulseGuiding
+
+No more star alignment or hibernation mode needed to enable remote use. No more fidilling with the handset by a human, the mount can be aligned remotely from a cold start.
 
 THIS IS A WORK IN PROGRESS
 
