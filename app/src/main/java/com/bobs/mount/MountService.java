@@ -76,6 +76,8 @@ public class MountService {
             throw new IllegalStateException("Mount location is not set. Please connect GPS or set location");
         }
         LOGGER.info("Syncing to RA:{} DEC:{}", target.getRaHours(), target.getDec());
+        LOGGER.debug("**SYNC** RA  DIFF = {}",target.getRaHours() - mount.getRaHours());
+        LOGGER.debug("**SYNC** DEC DIFF = {}",target.getDec() - mount.getDecDegrees());
         if (mount.getTrackingState().equals(TrackingState.IDLE)) {
             startTracking();
         }
@@ -95,6 +97,7 @@ public class MountService {
         mount.setAligned(true);
         mount.setError(false);
     }
+
 
     /**
      * Slew the mount to a new position. If the target location is less than 1deg (approx) from the current location
