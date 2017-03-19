@@ -76,8 +76,7 @@ public class MountService {
             throw new IllegalStateException("Mount location is not set. Please connect GPS or set location");
         }
         LOGGER.info("Syncing to RA:{} DEC:{}", target.getRaHours(), target.getDec());
-        LOGGER.debug("**SYNC** RA  DIFF = {}",target.getRaHours() - mount.getRaHours());
-        LOGGER.debug("**SYNC** DEC DIFF = {}",target.getDec() - mount.getDecDegrees());
+        logSyncDifference(target,mount);
         if (mount.getTrackingState().equals(TrackingState.IDLE)) {
             startTracking();
         }
@@ -96,6 +95,18 @@ public class MountService {
         queryMountState();
         mount.setAligned(true);
         mount.setError(false);
+    }
+
+    /**
+     * Temporary: used to collect differences in sync points. Useful for future mount modeling.
+     * @param target
+     * @param mount
+     */
+    private void logSyncDifference(Target target, Mount mount) {
+        CoordTransformer coordTransformer = new CoordTransformer();
+        coordTransformer.populateAltAzFromRaDec(mount);
+        LOGGER.debug("**SYNC DIFF-header**,alt,az,ra-diff,dec-diff");
+        LOGGER.debug("**SYNC DIFF-values**,{},{},{},{}",mount.getAlt(), mount.getAz(), target.getRaHours() - mount.getRaHours(), target.getDec() - mount.getDecDegrees());
     }
 
 
