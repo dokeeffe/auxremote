@@ -29,7 +29,7 @@ public class Mount {
     public static final String PERSISTANCE_STORE = "auxremote-mount.json";
     private static final Logger LOGGER = LoggerFactory.getLogger(Mount.class);
     private static final long ONE_HOUR = 1000 * 60 * 60;
-    private static final Double DEFAULT_ALT_SLEW_LIMIT = -10.0;
+    private static final Double DEFAULT_ALT_SLEW_LIMIT = -30.0;
     private String version;
     private TrackingState trackingState;
     private Double raHours = 0.0;
