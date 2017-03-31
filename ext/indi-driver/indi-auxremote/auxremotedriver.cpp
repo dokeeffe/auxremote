@@ -244,9 +244,9 @@ bool AuxRemote::Connect() {
       DEBUG(INDI::Logger::DBG_ERROR, "HTTP API endpoint is not available. Set it in the options tab");
       return false;
   }
-  DEBUGF(INDI::Logger::DBG_DEBUG,  "Updating SerialPort to %s...", PortT[0].text);
+  // DEBUGF(INDI::Logger::DBG_DEBUG,  "Updating SerialPort to %s...", PortT[0].text);
   char _json[60];
-  snprintf(_json, 60, "{\"serialPort\":\"%s\"}", PortT[0].text);
+  snprintf(_json, 60, "{\"serialPort\":\"%s\"}", "/dev/celestron"); //PortT[0].text); TODO://fix this. changed in panic after indi upgrade
   SendPostRequest(_json,"/mount");
 
   DEBUGF(INDI::Logger::DBG_DEBUG,  "Connecting to %s...", httpEndpointT[0].text);
@@ -474,7 +474,7 @@ bool AuxRemote::Park() {
   return true;
 }
 
-void AuxRemote::SetCurrentPark() {
+bool AuxRemote::SetCurrentPark() {
   DEBUG(INDI::Logger::DBG_ERROR, "Setting current park pos");
   ln_hrz_posn horizontalPos;
   // Libnova south = 0, west = 90, north = 180, east = 270
@@ -503,13 +503,15 @@ void AuxRemote::SetCurrentPark() {
 
   SetAxis1Park(parkAZ);
   SetAxis2Park(parkAlt);
+  return true;
 }
 
-void AuxRemote::SetDefaultPark() {
+bool AuxRemote::SetDefaultPark() {
   // By default set RA to HA
   SetAxis1Park(ln_get_apparent_sidereal_time(ln_get_julian_from_sys()));
   // Set DEC to 90 or -90 depending on the hemisphere
   SetAxis2Park( (LocationN[LOCATION_LATITUDE].value > 0) ? 90 : -90);
+  return true;
 }
 
 
