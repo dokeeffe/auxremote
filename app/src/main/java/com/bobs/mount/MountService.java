@@ -334,18 +334,22 @@ public class MountService {
      * @param target
      */
     public void guide(Target target) {
-        LOGGER.debug("Guiding {} {}ms", target.getMotion(), target.getGuidePulseDurationMs());
-        Axis axis = Axis.ALT;
-        boolean positive = true;
-        if ("east".equals(target.getMotion()) || "west".equals(target.getMotion())) {
-            axis = Axis.AZ;
+        if(mount.getTrackingState()==PARKING || mount.getTrackingState()==SLEWING) {
+            LOGGER.warn("Cannot process guide command while mount is slewing");
+        } else {
+            LOGGER.debug("Guiding {} {}ms", target.getMotion(), target.getGuidePulseDurationMs());
+            Axis axis = Axis.ALT;
+            boolean positive = true;
+            if ("east".equals(target.getMotion()) || "west".equals(target.getMotion())) {
+                axis = Axis.AZ;
+            }
+            if ("east".equals(target.getMotion()) || "south".equals(target.getMotion())) {
+                positive = false;
+            }
+            auxAdapter.queueCommand(new Move(mount, 1, axis, positive));
+            sleep(target.getGuidePulseDurationMs().intValue());
+            auxAdapter.queueCommand(new Move(mount, 0, axis, positive));
         }
-        if ("east".equals(target.getMotion()) || "south".equals(target.getMotion())) {
-            positive = false;
-        }
-        auxAdapter.queueCommand(new Move(mount, 1, axis, positive));
-        sleep(target.getGuidePulseDurationMs().intValue());
-        auxAdapter.queueCommand(new Move(mount, 0, axis, positive));
     }
 
     /**

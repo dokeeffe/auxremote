@@ -270,6 +270,19 @@ public class MountServiceTest {
     }
 
     @Test
+    public void guide_whenParking_then_guideIgnored() throws Exception {
+        Target target = new Target();
+        target.setGuidePulseDurationMs(10.0);
+        target.setMotion("west");
+        mount.setTrackingState(TrackingState.PARKING);
+
+        mountService.guide(target);
+
+        List<MountCommand> queuedCommands = fakeAuxAdapter.getQueuedCommands();
+        assertEquals(0, queuedCommands.size());
+    }
+
+    @Test
     public void guide_west() throws Exception {
         Target target = new Target();
         target.setGuidePulseDurationMs(10.0);
