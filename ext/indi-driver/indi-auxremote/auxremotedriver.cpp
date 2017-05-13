@@ -19,6 +19,7 @@
 
 #define	POLLMS      1000
 #define PEC_TAB   "PEC"
+#define CONNECTION_TAB   "Connection"
 
 std::unique_ptr<AuxRemote> aux_remote(new AuxRemote());
 
@@ -76,11 +77,13 @@ const char * AuxRemote::getDefaultName() {
 
 bool AuxRemote::initProperties() {
   IUFillText(&CurrentStateMsgT[0],"State","Mount Msgs",NULL);
-  IUFillTextVector(&CurrentStateMsgTP,CurrentStateMsgT,1,getDeviceName(),"STATE","MOUNT_MSG",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
+  IUFillTextVector(&CurrentStateMsgTP, CurrentStateMsgT, 1, getDeviceName(), "STATE", "MOUNT_MSG", MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
 
-  INDI::Telescope::initProperties();
   IUFillText(&httpEndpointT[0], "API_ENDPOINT", "API Endpoint", "http://localhost:8080/api");
-  IUFillTextVector(&httpEndpointTP, httpEndpointT, 1, getDeviceName(), "HTTP_API_ENDPOINT", "HTTP endpoint", OPTIONS_TAB, IP_RW, 5, IPS_IDLE);
+  IUFillTextVector(&httpEndpointTP, httpEndpointT, 1, getDeviceName(), "HTTP_API_ENDPOINT", "HTTP endpoint", CONNECTION_TAB, IP_RW, 5, IPS_IDLE);
+  IUFillText(&auxRemoteSerialDeviceT[0], "AUX_REMOTE_SERIAL_DEVICE", "Remote Server serial dev", "/dev/celestron");
+  IUFillTextVector(&auxRemoteSerialDeviceTP, auxRemoteSerialDeviceT, 1, getDeviceName(), "HTTP_AUX_REMOTE_SERIAL_DEVICE", "Remote Server serial dev", CONNECTION_TAB, IP_RW, 5, IPS_IDLE);
+  INDI::Telescope::initProperties();
 
   //pec tab
   IUFillText(&PecT[0], "State", "state", "UNKNOWN");
@@ -103,12 +106,14 @@ bool AuxRemote::initProperties() {
 bool AuxRemote::saveConfigItems(FILE *fp) {
   INDI::Telescope::saveConfigItems(fp);
   IUSaveConfigText(fp, &httpEndpointTP);
+  IUSaveConfigText(fp, &auxRemoteSerialDeviceTP);
   return true;
 }
 
 void AuxRemote::ISGetProperties(const char *dev) {
   INDI::Telescope::ISGetProperties (dev);
   defineText(&httpEndpointTP);
+  defineText(&auxRemoteSerialDeviceTP);
   defineText(&PecTP);
   defineSwitch(&PecModeSP);
 
@@ -188,6 +193,12 @@ bool AuxRemote::ISNewText(const char *dev, const char *name, char *texts[], char
         IDSetText(&httpEndpointTP, NULL);
         return true;
     }
+    if (!strcmp(auxRemoteSerialDeviceTP.name, name)) {
+        IUUpdateText(&auxRemoteSerialDeviceTP, texts, names, n);
+        auxRemoteSerialDeviceTP.s = IPS_OK;
+        IDSetText(&auxRemoteSerialDeviceTP, NULL);
+        return true;
+    }
   }
   return Telescope::ISNewText(dev,name,texts,names,n);
 }
@@ -241,12 +252,13 @@ bool AuxRemote::Connect() {
   bool connected = false;
   if (httpEndpointT[0].text == NULL)
   {
-      DEBUG(INDI::Logger::DBG_ERROR, "HTTP API endpoint is not available. Set it in the options tab");
+      DEBUG(INDI::Logger::DBG_ERROR, "HTTP endpoint is not available. Set it in the connection tab");
       return false;
   }
-  // DEBUGF(INDI::Logger::DBG_DEBUG,  "Updating SerialPort to %s...", PortT[0].text);
+  DEBUGF(INDI::Logger::DBG_DEBUG,  "Updating remote serialPort to %s...", auxRemoteSerialDeviceT[0].text);
   char _json[60];
-  snprintf(_json, 60, "{\"serialPort\":\"%s\"}", "/dev/celestron"); //PortT[0].text); TODO://fix this. changed in panic after indi upgrade
+  //snprintf(_json, 60, "{\"serialPort\":\"%s\"}", "/dev/celestron"); //PortT[0].text); TODO://fix this. changed in panic after indi upgrade
+  snprintf(_json, 60, "{\"serialPort\":\"%s\"}", auxRemoteSerialDeviceT[0].text);
   SendPostRequest(_json,"/mount");
 
   DEBUGF(INDI::Logger::DBG_DEBUG,  "Connecting to %s...", httpEndpointT[0].text);

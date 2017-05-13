@@ -58,6 +58,10 @@ private:
   IText httpEndpointT[1];
   ITextVectorProperty httpEndpointTP;
 
+  /* API endpoint serial config */
+  IText auxRemoteSerialDeviceT[1];
+  ITextVectorProperty auxRemoteSerialDeviceTP;
+
   /* PEC */
   IText PecT[1];
   ITextVectorProperty PecTP;
