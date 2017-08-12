@@ -15,6 +15,9 @@
 #include <curl/curl.h>
 #include <indicom.h>
 
+#include <libnova/sidereal_time.h>
+#include <libnova/transform.h>
+
 #include "auxremotedriver.h"
 
 #define	POLLMS      1000
