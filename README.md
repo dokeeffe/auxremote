@@ -26,3 +26,7 @@ This system is in beta state and is currently being used and tested at [Ballyhou
 ![](http://52-8.xyz/images/allsky.gif)
 
 Special thanks to Andre Paquette for his amazing work [reverse engineering the AUX serial protocol](http://www.paquettefamily.ca/nexstar/NexStar_AUX_Commands_10.pdf) without his work this would not be possible.
+
+## Warning
+
+Use at your own risk. I can provide no guarantee against equipment damage.
