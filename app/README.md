@@ -9,7 +9,6 @@ The primary comsumer of this API is the INDI driver although a very basic javasc
 .  Implement ALTAZ and EQ-SOUTH tracking. Currently only EQ-NORTH is supported
 
 ### API documentation
-### TODO
 SYNC
 GOTO
 PARK
