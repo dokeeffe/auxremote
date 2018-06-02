@@ -602,11 +602,11 @@ bool AuxRemote::Abort() {
   return status;
 }
 
-IPState AuxRemote::GuideNorth(float ms) {
+IPState AuxRemote::GuideNorth(uint32_t ms) {
   DEBUGF(INDI::Logger::DBG_SESSION, "GUIDE CMD: N %.0f ms", ms);
   char _json[100];
   int _rate = 50;
-  snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"north\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%.0f\"}", _rate, ms);
+  snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"north\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%d\"}", _rate, ms);
   bool status = SendPostRequest(_json, "/mount/target");
   if (status) {
     return IPS_BUSY; //FIXME: should be IPS_OK??:
@@ -615,11 +615,11 @@ IPState AuxRemote::GuideNorth(float ms) {
   }
 }
 
-IPState AuxRemote::GuideSouth(float ms) {
+IPState AuxRemote::GuideSouth(uint32_t ms) {
   DEBUGF(INDI::Logger::DBG_SESSION, "GUIDE CMD: S %.0f ms", ms);
   char _json[100];
   int _rate = 50;
-  snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"south\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%.0f\"}", _rate, ms);
+  snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"south\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%d\"}", _rate, ms);
   bool status = SendPostRequest(_json, "/mount/target");
   if (status) {
     return IPS_BUSY; //FIXME: should be IPS_OK??:
@@ -628,11 +628,11 @@ IPState AuxRemote::GuideSouth(float ms) {
   }
 }
 
-IPState AuxRemote::GuideEast(float ms) {
+IPState AuxRemote::GuideEast(uint32_t ms) {
   DEBUGF(INDI::Logger::DBG_SESSION, "GUIDE CMD: E %.0f ms", ms);
   char _json[100];
   int _rate = 50;
-  snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"east\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%.0f\"}", _rate, ms);
+  snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"east\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%d\"}", _rate, ms);
   bool status = SendPostRequest(_json, "/mount/target");
   if (status) {
     return IPS_BUSY; //FIXME: should be IPS_OK??:
@@ -641,11 +641,11 @@ IPState AuxRemote::GuideEast(float ms) {
   }
 }
 
-IPState AuxRemote::GuideWest(float ms) {
+IPState AuxRemote::GuideWest(uint32_t ms) {
   DEBUGF(INDI::Logger::DBG_SESSION, "GUIDE CMD: W %.0f ms", ms);
   char _json[100];
   int _rate = 50;
-  snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"west\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%.0f\"}", _rate, ms);
+  snprintf(_json, 100, "{\"type\":\"guide\",\"motion\":\"west\",\"motionRate\":\"%d\", \"guidePulseDurationMs\":\"%d\"}", _rate, ms);
   bool status = SendPostRequest(_json, "/mount/target");
   if (status) {
     return IPS_BUSY; //FIXME: should be IPS_OK??:
