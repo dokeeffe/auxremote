@@ -7,4 +7,3 @@ Install required build dependencies
 Run (with sudo) the build.sh script to build and install the driver
 
 Above was tested with ubuntu 18.04
-
