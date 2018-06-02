@@ -34,5 +34,8 @@ Use at your own risk. I can provide no guarantee against equipment damage.
 
 ## Building / installing
 
-Build the indi diver. See the README in ext/indi-driver
+* Build the indi diver. See the README in ext/indi-driver. Use the indi-driver with an indi client such as Kstars/EKOS
 
+* Build the auxremote server side app. See the README in /app
+
+* Connect your mount handset to the machine running the serverside app.
