@@ -30,3 +30,9 @@ Special thanks to Andre Paquette for his amazing work [reverse engineering the A
 ## Warning
 
 Use at your own risk. I can provide no guarantee against equipment damage.
+
+
+## Building / installing
+
+Build the indi diver. See the README in ext/indi-driver
+
