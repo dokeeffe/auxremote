@@ -185,8 +185,8 @@ public class MountService {
             coordTransformer.populateAltAzFromRaDec(mount);
             LOGGER.debug("Monitoring Slew limit ALTAZ {} {}",mount.getAlt(), mount.getAz());
             if (SLEW_LIMIT_ENABLED && mount.getAlt() != null && mount.getAlt() < mount.getSlewLimitAlt()) {
-                auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, true));
-                auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, true));
+                auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, true, false));
+                auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, true, false));
                 mount.setAltSlewInProgress(false);
                 mount.setAzSlewInProgress(false);
                 mount.setError(true);
@@ -346,9 +346,9 @@ public class MountService {
             if ("east".equals(target.getMotion()) || "south".equals(target.getMotion())) {
                 positive = false;
             }
-            auxAdapter.queueCommand(new Move(mount, 1, axis, positive));
+            auxAdapter.queueCommand(new Move(mount, 1, axis, positive, true));
             sleep(target.getGuidePulseDurationMs().intValue());
-            auxAdapter.queueCommand(new Move(mount, 0, axis, positive));
+            auxAdapter.queueCommand(new Move(mount, 0, axis, positive, true));
         }
     }
 
@@ -383,10 +383,10 @@ public class MountService {
         boolean positive = "north".equals(direction) || "west".equals(direction);
         if ("abort".equals(direction)) {
             LOGGER.info("Stopping Motion request {}, {}", direction, target.getMotionRate());
-            auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, positive));
-            auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, positive));
+            auxAdapter.queueCommand(new Move(mount, 0, Axis.ALT, positive, false));
+            auxAdapter.queueCommand(new Move(mount, 0, Axis.AZ, positive, false));
         } else {
-            auxAdapter.queueCommand(new Move(mount, rate, axis, positive));
+            auxAdapter.queueCommand(new Move(mount, rate, axis, positive, false));
         }
         queryMountState();
     }

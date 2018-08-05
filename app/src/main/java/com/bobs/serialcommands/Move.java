@@ -19,6 +19,7 @@ public class Move extends MountCommand {
     public static final byte RESPONSE_LENGTH = 0x01;
     private final Axis axis;
     private final boolean positive;
+    private final boolean guidemove;
     private final int rate;
 
     /**
@@ -28,12 +29,14 @@ public class Move extends MountCommand {
      * @param rate     0 to 9 (0 means stop)
      * @param axis     the Axis ALT or AZ
      * @param positive the direction positive or negative
+     * @param guidemove if true then the move message is a guiding motion. This will not set the mount state to SLEWING
      */
-    public Move(Mount mount, int rate, Axis axis, boolean positive) {
+    public Move(Mount mount, int rate, Axis axis, boolean positive, boolean guidemove) {
         super(mount);
         this.rate = rate;
         this.axis = axis;
         this.positive = positive;
+        this.guidemove = guidemove;
     }
 
     @Override
@@ -63,11 +66,13 @@ public class Move extends MountCommand {
         if (message[0] != ACK) {
             LOGGER.error("Expected ACK, but got {}", DatatypeConverter.printHexBinary(message));
         } else {
-            mount.setTrackingState(rate == 0 ? TrackingState.TRACKING : TrackingState.SLEWING);
-            if (Axis.ALT == axis) {
-                mount.setAltSlewInProgress(rate == 0 ? false: true);
-            } else {
-                mount.setAzSlewInProgress(rate == 0 ? false: true);
+            mount.setTrackingState(rate == 0 || guidemove ? TrackingState.TRACKING : TrackingState.SLEWING);
+            if(! guidemove) {
+                if (Axis.ALT == axis) {
+                    mount.setAltSlewInProgress(rate == 0 ? false: true);
+                } else {
+                    mount.setAzSlewInProgress(rate == 0 ? false: true);
+                }
             }
 
         }

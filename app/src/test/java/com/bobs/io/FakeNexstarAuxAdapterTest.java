@@ -111,14 +111,14 @@ public class FakeNexstarAuxAdapterTest {
 
     @Test
     public void queueCommand_move0() throws Exception {
-        sut.queueCommand(new Move(mount, 0, Axis.ALT, true));
+        sut.queueCommand(new Move(mount, 0, Axis.ALT, true, false));
         sut.waitForQueueEmpty();
         assertEquals(TrackingState.TRACKING, mount.getTrackingState());
     }
 
     @Test
     public void queueCommand_move1() throws Exception {
-        sut.queueCommand(new Move(mount, 1, Axis.ALT, true));
+        sut.queueCommand(new Move(mount, 1, Axis.ALT, true, false));
         sut.waitForQueueEmpty();
         assertEquals(TrackingState.SLEWING, mount.getTrackingState());
     }
